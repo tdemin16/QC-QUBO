@@ -35,12 +35,13 @@ vector<int> solve(int n) {
     printf("k:%d\n", k);
     printf("imax:%d, N:%d, dmin:%d\n", imax, N, dmin);
 
-    MatrixXi P; // permutation matrix
-    P.setIdentity(n, n); // set as identity matrix
+    map<vector<int>, int> P, P1, P2;
+    make_identity(P, n); // set as identity matrix
     
     float p = 1; //probability of an element to be considered for shuffling
     int e = 0;
     int d = 0;
 
-    P = g(P, n, p);
+    P1 = g(P, n, p);
+    return vector<int>();
 }

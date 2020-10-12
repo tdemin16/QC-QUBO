@@ -8,4 +8,14 @@
 using namespace std;
 using namespace Eigen;
 
-MatrixXi g(MatrixXi, int, float);
+// Input: permutation matrix(map), dimension of the matrix, probability
+// Return: permuted matrix
+map<vector<int>, int> g(map<vector<int>, int>, int, float);
+
+// Input: empty matrix(map), dimension of the matrix
+// The matrix become the identity matrix of order n
+void make_identity(map<vector<int>, int>, int);
+
+// Input matrix of order n(map), dimension of the matrix
+// shuffle the matrix
+void shuffle(map<vector<int>,int>, int);

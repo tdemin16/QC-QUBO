@@ -1,4 +1,4 @@
-g++ -std=c++11 -o3 -fopenmp main.cpp lib.cpp -o main
+g++ -std=c++2a -o3 -fopenmp main.cpp lib.cpp -o main
 
 if [ $? -eq 0 ]; then
     echo ---Builded!---
