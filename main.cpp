@@ -11,7 +11,7 @@ using namespace Eigen;
 vector<int> solve(int);
 
 int main() {
-    int n = 6;  // number of coefficients
+    int n = 4;  // number of coefficients
 
     solve(n);
 
@@ -38,10 +38,14 @@ vector<int> solve(int n) {
     map<vector<int>, int> P, P1, P2;
     make_identity(P, n); // set as identity matrix
     
-    float p = 1; //probability of an element to be considered for shuffling
+    float p = 1.0f; //probability of an element to be considered for shuffling
     int e = 0;
     int d = 0;
 
     P1 = g(P, n, p);
+    P2 = g(P, n, p);
+
+    transpose(P1, n);
+
     return vector<int>();
 }
