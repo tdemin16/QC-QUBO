@@ -1,21 +1,10 @@
 #include "lib.h"
 
-void make_identity(map<vector<int>, int> &P, int n) {
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (i == j)
-                P.insert(pair<vector<int>, int>({i, j}, 1));  // Inserts 1 on the diagonal
-            else
-                P.insert(pair<vector<int>, int>({i, j}, 0));  // Inserts 0 on the other parts
-        }
-    }
-}
-
-map<vector<int>, int> g(map<vector<int>, int> P, int n, float pr) {
+MatrixXf g(MatrixXf P, int n, float pr) {
     float prob;
     srand(time(0));
     map<int, int> m;
-    map<vector<int>, int> P_first;
+    MatrixXf P_first(n, n);
 
     // with probability pr inserts i in the map with key i
     for (int i = 0; i < n; i++) {
@@ -25,70 +14,100 @@ map<vector<int>, int> g(map<vector<int>, int> P, int n, float pr) {
         }
     }
 
-    // shuffle the matrix P
-    shuffle(P, n);
+    // shuffle the keys
+    shuffle(m);
 
     auto end = m.end();
     for (int i = 0; i < n; i++) {
         auto search = m.find(i);
         if (search != end) {
             for (int j = 0; j < n; j++) {
-                P_first.insert(pair<vector<int>, int>({i, j}, P.at({m.at(i), j}))); //if i is a key of m, inserts the line vector P m[i] in Pi'
+                P_first(i, j) = P(m.at(i), j); //if m contains i, then take the vector Pi where i = m.at(i)
             }
         } else {
             for (int j = 0; j < n; j++) {
-                P_first.insert(pair<vector<int>, int>({i, j}, P.at({i, j}))); //if it isn't,  inserts the line vector Pi in Pi'
+                P_first(i, j) = P(i, j); //if m doesn't conatain i, then take the vector Pi
             }
         }
     }
 
+    //P_first is a permutation of P
     return P_first;
 }
 
-void shuffle(map<vector<int>, int> &P, int n) {
-    //print_map(P, n);
+void shuffle(map<int, int> &m) {
     srand(time(0));
-    vector<vector<int>> keys;
+    vector<int> keys; //Vector containing keys of m
 
-    for (auto i : P) {
-        keys.push_back(i.first);
+    for (auto i : m) {
+        keys.push_back(i.first); //add m's keys to keys vector
     }
-    random_shuffle(keys.begin(), keys.end());
+    random_shuffle(keys.begin(), keys.end()); //to be improved
 
-    vector<vector<int>>::iterator it = keys.begin();
-    for (auto &i : P) {
+    vector<int>::iterator it = keys.begin();
+    //substitute old keys with new ones (shuffled)
+    for (auto &i : m) {
         int ts = i.second;
-        i.second = P[*it];
-        P[*it] = ts;
+        i.second = m[*it];
+        m[*it] = ts;
         it++;
     }
-    //cout << endl <<endl;
-    //print_map(P, n);
 }
 
-void print_map(map<vector<int>, int> P, int n) {
-    for (auto it : P) {
-        cout << "{";
-        for (auto vec : it.first) {
-            cout << " " << vec;
+MatrixXf hadamard_product(MatrixXf P, MatrixXf Q, int n) {
+    MatrixXf R(n, n);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            R(i, j) = P(i, j) * Q(i, j);
         }
-        cout << " }, ";
-        cout << it.second << endl;
+    }
+
+    return R;
+}
+
+float fQ(MatrixXf Q, VectorXf x) {
+    return x.transpose() * Q * x;
+}
+
+MatrixXf kronecker_product(VectorXf z, int n) {
+    MatrixXf M(n, n);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            M(i, j) = z(i) * z(j);
+        }
+    }
+
+    return M;
+}
+
+MatrixXf diag(VectorXf z, int n) {
+    MatrixXf M(n, n);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i == j) {
+                M(i, j) = z(i);
+            } else {
+                M(i, j) = 0;
+            }
+        }
+    }
+
+    return M;
+}
+
+void h(VectorXf &z, int n, float pr) {
+    float random;
+    for(int i = 0; i< n; i++) {
+        random = (rand() % 10000000) / 10000000.0f;
+        if(random <= pr) {
+            z(i) = -z(i);
+        }
     }
 }
 
-map<vector<int>, int> transpose(map<vector<int>, int> &P, int n) {
-    //print_map(P, n);
-    int temp;
-
-    // swap each element with its transposed 
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = i + 1; j < n; j++) {
-            temp = P.at({i, j});
-            P[{i, j}] = P.at({j, i});
-            P.at({j, i}) = temp;
-        }
-    }
-    //cout << endl;
-    //print_map(P, n);
+float simulated_annealing(float f_first, float f_star, float p) {
+    float T = -1 / log(p);
+    return exp(-(f_first - f_star) / T);
 }
