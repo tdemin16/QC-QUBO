@@ -4,41 +4,44 @@
 
 #include "Eigen/Core"
 #include "lib.h"
-#include "poly.h"
+#include "randutils.hpp"
 #include "unsupported/Eigen/KroneckerProduct"
 
 using namespace std;
 using namespace Eigen;
 
-VectorXf solve(MatrixXf, MatrixXf, VectorXf, VectorXf, int);
+VectorXf solve(MatrixXf, MatrixXf, int);
 
 int main() {
+    srand(time(0));
     int n = 4;  // number of coefficients
 
+    //Vedere inizializzazione simmetrica
     MatrixXf Q(n, n);  //Toy Problem
-    Q << 1.0f, 3.0f, 0.0f, 1.0f,
-        3.0f, 4.0f, 0.0f, 2.0f,
-        0.0f, 0.0f, 0.0f, 3.0f,
-        1.0f, 2.0f, 3.0f, 3.0f;
+    Q << 1.0f, 3.0f, 5.0f, 1.0f,
+        3.0f, 2.0f, 7.0f, 2.0f,
+        5.0f, 7.0f, 3.0f, 3.0f,
+        1.0f, 2.0f, 3.0f, 4.0f;
 
+    // Provare matrice sparsa
     MatrixXf A(n, n);  //Toy Topology
-    A << 1.0f, 0.0f, 1.0f, 0.0f,
+    A << 0.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f;
 
-    VectorXf z1(n);  //Toy
-    z1 << 1, -1, -1, 1;
-
-    VectorXf z2(n);  //Toy
-    z2 << 1, 1, -1, -1;
-
-    solve(Q, A, z1, z2, n);
+    solve(Q, A, n);
 
     return 0;
 }
 
-VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
+VectorXf solve(MatrixXf Q, MatrixXf A, int n) {
+    VectorXf z1(n);  //Toy
+    z1 << -1, 1, -1, 1;
+
+    VectorXf z2(n);  //Toy
+    z2 << 1, 1, -1, -1;
+
     //Input
     float pmin = 0.1f;     // minimum probability 0 < pδ < 0.5 of permutation modification
     float eta = 0.1f;      // probability decreasing rate η > 0
@@ -52,6 +55,13 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
     int imax = 10;  // number of iterations
     int Nmax = 100;
     int dmin = 50;
+
+    //Random things
+    random_device rd;
+    unsigned int seed = rd() ^ rd();
+    mt19937 uniform;
+    uniform.seed(seed);
+    uniform_real_distribution<float> real_distr(0.0, 1.0);
 
     MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
@@ -73,10 +83,10 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
     MatrixXf theta1(n, n), theta2(n, n);
 
     theta1 = (P1.transpose() * Q * P1);
-    theta1 = hadamard_product(theta1, A, n);
+    theta1 = theta1.cwiseProduct(A);
 
     theta2 = (P2.transpose() * Q * P2);
-    theta2 = hadamard_product(theta2, A, n);
+    theta2 = theta2.cwiseProduct(A);
 
     // run annealer k times
     // estimate energy argmin P1^T and P2^T
@@ -86,7 +96,7 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
 
     VectorXf z_star(n), z_first(n);
     float f_star;
-    MatrixXf P_star(n, n);
+    MatrixXf P_star(n, n), z_diag(n, n);
 
     if (f1 < f2) {
         z_star = z1;
@@ -101,8 +111,10 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
     }
 
     MatrixXf S(n, n);
-    if ((f1 - f2) > __FLT_EPSILON__ ) {  //if(f1 != f2)
-        S = kronecker_product(z_first, n) - In + diag(z_first, n);
+    // f1 and f2 are floats -> float comparison
+    if ((f1 - f2) > __FLT_EPSILON__) {  // if(f1 != f2)
+        z_diag = z_first.asDiagonal();
+        S = kroneckerProduct(z1, z1.transpose()) - In + z_diag;
     } else {
         S = MatrixXf::Zero(n, n);
     }
@@ -111,19 +123,19 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
     MatrixXf Q_first(n, n);
     MatrixXf theta_first;
     float f_first;
-    float random;
     do {
         Q_first = Q + lambda * S;
-        if (!(i % N)) p = p - (p - pmin) * eta;
+        if (!(i % N)) p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
         P = g(P_star, n, p);
         theta_first = P.transpose() * Q * P;
-        theta_first = hadamard_product(theta_first, A, n);
+        theta_first = theta_first.cwiseProduct(A);
 
         // run annealer k times
         // estimate energy argmin P^T
 
-        h(z_first, n, p);
+        if (real_distr(uniform) <= q) h(z_first, n, p);  // possibly perturb the candidate
+
         if (z_first != z_star) {
             f_first = fQ(Q, z_first);
 
@@ -133,11 +145,12 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
                 P_star = P;
                 e = 0;
                 d = 0;
-                S = S + kronecker_product(z_first, n) - In + diag(z_first, n);
+                z_diag = z_first.asDiagonal();
+                S = S + kroneckerProduct(z1, z1.transpose()) - In + z_diag;
+
             } else {
                 d++;
-                random = (rand() % 100000000) / 100000000.0f;
-                if (random <= simulated_annealing(f_first, f_star, p)) {
+                if (real_distr(uniform) <= simulated_annealing(f_first, f_star, p)) {
                     swap(z_first, z_star);
                     f_star = f_first;
                     P_star = P;
@@ -149,7 +162,8 @@ VectorXf solve(MatrixXf Q, MatrixXf A, VectorXf z1, VectorXf z2, int n) {
             e++;
 
         i++;
+
     } while (i < imax && (e + d < Nmax || d > dmin));  //Da riguardare
 
-    return VectorXf();
+    return z_star;
 }

@@ -17,21 +17,9 @@ MatrixXf g(MatrixXf, int, float);
 // Shuffle the matrix
 void shuffle(map<int, int> &);
 
-// Input: Matrix of order n Q, Matrix of order n A, dimension of the matrixes n
-// Return: Matrix where element rij = qij * aij
-MatrixXf hadamard_product(MatrixXf, MatrixXf, int);
-
 // Input: Matrix of order n Q, Vector of n integers z
 // Return: z^T * Q * z
 float fQ(MatrixXf, VectorXf);
-
-// Input: Vector of n integers z, dimension of the vector n
-// Return: kroneker product of z by itself
-MatrixXf kronecker_product(VectorXf, int);
-
-// Input: Vector of n integers z, dimension of the vector n
-// Return: Matrix where mij = zi, i == j; 0 otherwise
-MatrixXf diag(VectorXf, int);
 
 // Input: Vector of n integers z, dimension of the vector n, probability pr
 // With probability pr, the element zi = -zi

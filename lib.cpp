@@ -1,16 +1,19 @@
 #include "lib.h"
 
 MatrixXf g(MatrixXf P, int n, float pr) {
-    float prob;
-    srand(time(0));
-    map<int, int> m;
+    map<int, int> m;  // Room for improvements
     MatrixXf P_first(n, n);
+
+    random_device rd;
+    unsigned int seed = rd() ^ rd();
+    mt19937 uniform;
+    uniform.seed(seed);
+    uniform_real_distribution<float> real_distr(0.0, 1.0);
 
     // with probability pr inserts i in the map with key i
     for (int i = 0; i < n; i++) {
-        prob = (rand() % (10000000)) / 10000000.0f;  // generate a random number from 0 to 1
-        if (prob <= pr) {                            // checks if the extracted numeber is equal or less than pr
-            m.insert(pair<int, int>(i, i));          //if it is, inserts the number
+        if (real_distr(uniform) <= pr) {     // checks if the extracted numeber is equal or less than pr
+            m.insert(pair<int, int>(i, i));  //if it is, inserts the number
         }
     }
 
@@ -22,11 +25,11 @@ MatrixXf g(MatrixXf P, int n, float pr) {
         auto search = m.find(i);
         if (search != end) {
             for (int j = 0; j < n; j++) {
-                P_first(i, j) = P(m.at(i), j); //if m contains i, then take the vector Pi where i = m.at(i)
+                P_first(i, j) = P(m.at(i), j);  //if m contains i, then take the vector Pi where i = m.at(i)
             }
         } else {
             for (int j = 0; j < n; j++) {
-                P_first(i, j) = P(i, j); //if m doesn't conatain i, then take the vector Pi
+                P_first(i, j) = P(i, j);  //if m doesn't conatain i, then take the vector Pi
             }
         }
     }
@@ -36,13 +39,12 @@ MatrixXf g(MatrixXf P, int n, float pr) {
 }
 
 void shuffle(map<int, int> &m) {
-    srand(time(0));
-    vector<int> keys; //Vector containing keys of m
+    vector<int> keys;  //Vector containing keys of m
 
     for (auto i : m) {
-        keys.push_back(i.first); //add m's keys to keys vector
+        keys.push_back(i.first);  //add m's keys to keys vector
     }
-    random_shuffle(keys.begin(), keys.end()); //to be improved
+    random_shuffle(keys.begin(), keys.end());  //to be improved
 
     vector<int>::iterator it = keys.begin();
     //substitute old keys with new ones (shuffled)
@@ -54,56 +56,19 @@ void shuffle(map<int, int> &m) {
     }
 }
 
-MatrixXf hadamard_product(MatrixXf P, MatrixXf Q, int n) {
-    MatrixXf R(n, n);
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            R(i, j) = P(i, j) * Q(i, j);
-        }
-    }
-
-    return R;
-}
-
 float fQ(MatrixXf Q, VectorXf x) {
     return x.transpose() * Q * x;
 }
 
-MatrixXf kronecker_product(VectorXf z, int n) {
-    MatrixXf M(n, n);
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            M(i, j) = z(i) * z(j);
-        }
-    }
-
-    return M;
-}
-
-MatrixXf diag(VectorXf z, int n) {
-    MatrixXf M(n, n);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (i == j) {
-                M(i, j) = z(i);
-            } else {
-                M(i, j) = 0;
-            }
-        }
-    }
-
-    return M;
-}
-
 void h(VectorXf &z, int n, float pr) {
-    float random;
-    for(int i = 0; i< n; i++) {
-        random = (rand() % 10000000) / 10000000.0f;
-        if(random <= pr) {
-            z(i) = -z(i);
-        }
+    random_device rd;
+    unsigned int seed = rd() ^ rd();
+    mt19937 uniform;
+    uniform.seed(seed);
+    uniform_real_distribution<float> real_distr(0.0, 1.0);
+
+    for (int i = 0; i < n; i++) {
+        if (real_distr(uniform) <= pr) z(i) = -z(i);
     }
 }
 
