@@ -1,6 +1,7 @@
 #include "lib.h"
 
-MatrixXf g(MatrixXf P, int n, float pr) {
+MatrixXf g(MatrixXf P, float pr) {
+    int n = P.rows();
     map<int, int> m;  // Room for improvements
     MatrixXf P_first(n, n);
 
@@ -60,7 +61,9 @@ float fQ(MatrixXf Q, VectorXf x) {
     return x.transpose() * Q * x;
 }
 
-void h(VectorXf &z, int n, float pr) {
+void h(VectorXf &z, float pr) {
+    int n = z.cols();
+
     random_device rd;
     unsigned int seed = rd() ^ rd();
     mt19937 uniform;
@@ -75,4 +78,11 @@ void h(VectorXf &z, int n, float pr) {
 float simulated_annealing(float f_first, float f_star, float p) {
     float T = -1 / log(p);
     return exp(-(f_first - f_star) / T);
+}
+
+float min(float lambda0, int i, int e) {
+    float lambda_first = lambda0 / (2 + i - e);
+    
+    if(lambda0 < lambda_first) return lambda0;
+    return lambda_first;
 }

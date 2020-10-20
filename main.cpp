@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Eigen/Core"
+#include "Eigen/SparseCore"
 #include "lib.h"
 #include "randutils.hpp"
 #include "unsupported/Eigen/KroneckerProduct"
@@ -10,37 +11,63 @@
 using namespace std;
 using namespace Eigen;
 
-VectorXf solve(MatrixXf, MatrixXf, int);
+VectorXf solve(MatrixXf, SparseMatrix<bool>);
 
 int main() {
     srand(time(0));
     int n = 4;  // number of coefficients
 
-    //Vedere inizializzazione simmetrica
-    MatrixXf Q(n, n);  //Toy Problem
-    Q << 1.0f, 3.0f, 5.0f, 1.0f,
-        3.0f, 2.0f, 7.0f, 2.0f,
-        5.0f, 7.0f, 3.0f, 3.0f,
-        1.0f, 2.0f, 3.0f, 4.0f;
+    MatrixXf Q(n, n);  //QUBO Problem Matrix
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
+            if (j == i)
+                Q(i, j) = (float)i / 2;  // i/2 on the diagonal (after will be added up by itself)
+            else
+                Q(i, j) = (float)((rand() % (100)) + 10) / 10;  // random value in [1, 10] on half the matrix
+        }
+    }
+    MatrixXf temp = Q;
+    temp.transposeInPlace();
+    Q += temp;  // Add itself but transposed -> symmetric matrix
 
-    // Provare matrice sparsa
-    MatrixXf A(n, n);  //Toy Topology
-    A << 0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f;
+    SparseMatrix<bool> A(n, n);  //Toy Topology
+    vector<Triplet<bool>> t;
+    t.reserve(8);
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (rand() % (2)) {
+                t.push_back(Triplet<bool>(i, j, true));
+                t.push_back(Triplet<bool>(j, i, true));
+            }
+        }
+    }
+    A.setFromTriplets(t.begin(), t.end());
 
-    solve(Q, A, n);
+    VectorXf sol = solve(Q, A);
+
+    cout << "Solution: " << sol.transpose() << endl;
 
     return 0;
 }
 
-VectorXf solve(MatrixXf Q, MatrixXf A, int n) {
-    VectorXf z1(n);  //Toy
-    z1 << -1, 1, -1, 1;
+VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
+    //Init
+    int n = Q.rows();
 
+    VectorXf z1(n);  //Toy
     VectorXf z2(n);  //Toy
-    z2 << 1, 1, -1, -1;
+    for (int i = 0; i < n; i++) {
+        if (rand() % (2))
+            z1(i) = 1;
+        else
+            z1(i) = -1;
+    }
+    for (int i = 0; i < n; i++) {
+        if (rand() % (2))
+            z2(i) = 1;
+        else
+            z2(i) = -1;
+    }
 
     //Input
     float pmin = 0.1f;     // minimum probability 0 < pδ < 0.5 of permutation modification
@@ -53,8 +80,12 @@ VectorXf solve(MatrixXf Q, MatrixXf A, int n) {
 
     //Termination Parameters
     int imax = 10;  // number of iterations
-    int Nmax = 100;
+    int Nmax = 1000;
     int dmin = 50;
+
+    int e = 0;
+    int d = 0;
+    float lambda = lambda0;
 
     //Random things
     random_device rd;
@@ -69,48 +100,50 @@ VectorXf solve(MatrixXf Q, MatrixXf A, int n) {
     printf("pmin:%f, eta:%f, q:%f, lambda0: %f\n", pmin, eta, q, lambda0);
     printf("k:%d\n", k);
     printf("imax:%d, N:%d, dmin:%d\n", imax, N, dmin);
+    cout << endl
+         << "Q" << endl
+         << Q << endl
+         << endl;
+    cout << "A" << endl
+         << A << endl;
 
-    MatrixXf P(n, n), P1(n, n), P2(n, n);
+    //Algorithm
+    MatrixXf Q_first(n, n);
+    MatrixXf P(n, n), P1(n, n), P2(n, n), P_star(n, n);
+    MatrixXf theta1(n, n), theta2(n, n), theta_first;
+    VectorXf z_star(n), z_first(n);
+    MatrixXf z_diag(n, n);
+    MatrixXf S(n, n);  //Tabu Matrix
+    float f1, f2, f_star, f_first;
+
     P = In;
+    P1 = g(P, p);
+    P2 = g(P, p);
 
-    int e = 0;
-    int d = 0;
-    float lambda = lambda0;
+    theta1 = P1.transpose() * Q * P1;
+    theta1 = theta1.cwiseProduct(A.cast<float>());
 
-    P1 = g(P, n, p);
-    P2 = g(P, n, p);
-
-    MatrixXf theta1(n, n), theta2(n, n);
-
-    theta1 = (P1.transpose() * Q * P1);
-    theta1 = theta1.cwiseProduct(A);
-
-    theta2 = (P2.transpose() * Q * P2);
-    theta2 = theta2.cwiseProduct(A);
+    theta2 = P2.transpose() * Q * P2;
+    theta2 = theta2.cwiseProduct(A.cast<float>());
 
     // run annealer k times
     // estimate energy argmin P1^T and P2^T
 
-    float f1 = fQ(Q, z1);
-    float f2 = fQ(Q, z2);
+    f1 = fQ(Q, z1);
+    f2 = fQ(Q, z2);
 
-    VectorXf z_star(n), z_first(n);
-    float f_star;
-    MatrixXf P_star(n, n), z_diag(n, n);
-
-    if (f1 < f2) {
+    if (f1 < f2) {  // f1 is better
         z_star = z1;
         f_star = f1;
         P_star = P1;
         z_first = z2;
-    } else {
+    } else {  // f2 is better
         z_star = z2;
         f_star = f2;
         P_star = P2;
         z_first = z1;
     }
 
-    MatrixXf S(n, n);
     // f1 and f2 are floats -> float comparison
     if ((f1 - f2) > __FLT_EPSILON__) {  // if(f1 != f2)
         z_diag = z_first.asDiagonal();
@@ -120,26 +153,23 @@ VectorXf solve(MatrixXf Q, MatrixXf A, int n) {
     }
 
     int i = 0;
-    MatrixXf Q_first(n, n);
-    MatrixXf theta_first;
-    float f_first;
     do {
         Q_first = Q + lambda * S;
+        
         if (!(i % N)) p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
-        P = g(P_star, n, p);
+        P = g(P_star, p);
         theta_first = P.transpose() * Q * P;
-        theta_first = theta_first.cwiseProduct(A);
+        theta_first = theta_first.cwiseProduct(A.cast<float>());
 
         // run annealer k times
         // estimate energy argmin P^T
 
-        if (real_distr(uniform) <= q) h(z_first, n, p);  // possibly perturb the candidate
+        if (real_distr(uniform) <= q) h(z_first, p);  // possibly perturb the candidate
 
         if (z_first != z_star) {
             f_first = fQ(Q, z_first);
-
-            if (f_first < f_star) {
+            if (f_first < f_star) {  // f_first is better than f_star
                 swap(z_first, z_star);
                 f_star = f_first;
                 P_star = P;
@@ -157,6 +187,8 @@ VectorXf solve(MatrixXf Q, MatrixXf A, int n) {
                     e = 0;
                 }
             }
+
+            lambda = min(lambda0, i, e);
 
         } else
             e++;
