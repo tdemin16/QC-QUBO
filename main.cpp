@@ -11,63 +11,68 @@
 using namespace std;
 using namespace Eigen;
 
-VectorXf solve(MatrixXf, SparseMatrix<bool>);
+VectorXf solve(MatrixXf);
+
+mt19937 e_uniform_g;
+mt19937 e_uniform_h;
+mt19937 e_uniform_ann;
+mt19937 e_uniform_pert;
+unsigned int seed_g;
+unsigned int seed_h;
+unsigned int seed_ann;
+unsigned int seed_pert;
+random_device rd;
+uniform_real_distribution<float> d_real_uniform(0.0, 1.0);
 
 int main() {
     srand(time(0));
-    int n = 4;  // number of coefficients
+    int n = 8;  // number of coefficients (has to be 8*x)
 
-    MatrixXf Q(n, n);  //QUBO Problem Matrix
-    for (int i = 0; i < n; i++) {
-        for (int j = i; j < n; j++) {
-            if (j == i)
-                Q(i, j) = (float)i / 2;  // i/2 on the diagonal (after will be added up by itself)
-            else
-                Q(i, j) = (float)((rand() % (100)) + 10) / 10;  // random value in [1, 10] on half the matrix
-        }
-    }
-    MatrixXf temp = Q;
-    temp.transposeInPlace();
-    Q += temp;  // Add itself but transposed -> symmetric matrix
-
-    SparseMatrix<bool> A(n, n);  //Toy Topology
-    vector<Triplet<bool>> t;
-    t.reserve(8);
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            if (rand() % (2)) {
-                t.push_back(Triplet<bool>(i, j, true));
-                t.push_back(Triplet<bool>(j, i, true));
+    if (n % 8 == 0 && n != 0) {
+        MatrixXf Q(n, n);  //QUBO Problem Matrix
+        for (int i = 0; i < n; i++) {
+            for (int j = i; j < n; j++) {
+                if (j == i)
+                    Q(i, j) = (float)i / 2;  // i/2 on the diagonal (after will be added up by itself)
+                else
+                    Q(i, j) = (float)((rand() % (100)) + 10) / 10;  // random value in [1, 10] on half the matrix
             }
         }
+        MatrixXf temp = Q;
+        temp.transposeInPlace();
+        Q += temp;  // Add itself but transposed -> symmetric matrix
+
+        VectorXf sol = solve(Q);
+
+        cout << "Solution: " << sol.transpose() << endl;
+    } else {
+        cout << "n must be multiple of 8" << endl;
     }
-    A.setFromTriplets(t.begin(), t.end());
-
-    VectorXf sol = solve(Q, A);
-
-    cout << "Solution: " << sol.transpose() << endl;
 
     return 0;
 }
 
-VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
+VectorXf solve(MatrixXf Q) {
     //Init
     int n = Q.rows();
+    SparseMatrix<float> A = init_A(n);  //Chimera topology
 
-    VectorXf z1(n);  //Toy
-    VectorXf z2(n);  //Toy
-    for (int i = 0; i < n; i++) {
+    // Toy ------------------------------
+    VectorXf z1(n);
+    VectorXf z2(n);
+    /*for (int i = 0; i < n; i++) {
         if (rand() % (2))
             z1(i) = 1;
         else
             z1(i) = -1;
-    }
+    }*/
     for (int i = 0; i < n; i++) {
         if (rand() % (2))
             z2(i) = 1;
         else
             z2(i) = -1;
     }
+    //-----------------------------------
 
     //Input
     float pmin = 0.1f;     // minimum probability 0 < pδ < 0.5 of permutation modification
@@ -79,20 +84,9 @@ VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
     int N = 10;            // Decreasing time
 
     //Termination Parameters
-    int imax = 10;  // number of iterations
+    int imax = 10;
     int Nmax = 1000;
     int dmin = 50;
-
-    int e = 0;
-    int d = 0;
-    float lambda = lambda0;
-
-    //Random things
-    random_device rd;
-    unsigned int seed = rd() ^ rd();
-    mt19937 uniform;
-    uniform.seed(seed);
-    uniform_real_distribution<float> real_distr(0.0, 1.0);
 
     MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
@@ -105,39 +99,40 @@ VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
          << Q << endl
          << endl;
     cout << "A" << endl
-         << A << endl;
+         << A << endl
+         << endl;
 
     //Algorithm
     MatrixXf Q_first(n, n);
     MatrixXf P(n, n), P1(n, n), P2(n, n), P_star(n, n);
-    MatrixXf theta1(n, n), theta2(n, n), theta_first;
+    SparseMatrix<float> theta1(n, n), theta2(n, n), theta_first;
     VectorXf z_star(n), z_first(n);
     MatrixXf z_diag(n, n);
     MatrixXf S(n, n);  //Tabu Matrix
     float f1, f2, f_star, f_first;
+    int e = 0;
+    int d = 0;
+    float lambda = lambda0;
 
     P = In;
     P1 = g(P, p);
     P2 = g(P, p);
 
-    theta1 = P1.transpose() * Q * P1;
-    theta1 = theta1.cwiseProduct(A.cast<float>());
+    theta1 = (P1.transpose() * Q * P1).cwiseProduct(A);
+    theta2 = (P2.transpose() * Q * P2).cwiseProduct(A);
 
-    theta2 = P2.transpose() * Q * P2;
-    theta2 = theta2.cwiseProduct(A.cast<float>());
-
-    // run annealer k times
-    // estimate energy argmin P1^T and P2^T
+    z1 = P1.transpose() * min_energy(theta1);
+    z2 = P2.transpose() * min_energy(theta2);
 
     f1 = fQ(Q, z1);
     f2 = fQ(Q, z2);
 
-    if (f1 < f2) {  // f1 is better
-        z_star = z1;
+    if (f1 < f2) {    // f1 is better
+        z_star = z1;  // Best
         f_star = f1;
         P_star = P1;
-        z_first = z2;
-    } else {  // f2 is better
+        z_first = z2;  // Worst
+    } else {           // f2 is better
         z_star = z2;
         f_star = f2;
         P_star = P2;
@@ -145,8 +140,8 @@ VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
     }
 
     // f1 and f2 are floats -> float comparison
-    if ((f1 - f2) > __FLT_EPSILON__) {  // if(f1 != f2)
-        z_diag = z_first.asDiagonal();
+    if (abs(f1 - f2) > __FLT_EPSILON__) {  // if(f1 != f2)
+        z_diag = z_first.asDiagonal();     // Matrix where the diagonal is made by elemnt of z_first
         S = kroneckerProduct(z1, z1.transpose()) - In + z_diag;
     } else {
         S = MatrixXf::Zero(n, n);
@@ -155,22 +150,19 @@ VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
     int i = 0;
     do {
         Q_first = Q + lambda * S;
-        
+
         if (!(i % N)) p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
         P = g(P_star, p);
-        theta_first = P.transpose() * Q * P;
-        theta_first = theta_first.cwiseProduct(A.cast<float>());
+        theta_first = (P.transpose() * Q * P).cwiseProduct(A);
+        z_first = P.transpose() * min_energy(theta_first);
 
-        // run annealer k times
-        // estimate energy argmin P^T
+        if (d_real_uniform(e_uniform_pert) <= q) h(z_first, p);  // possibly perturb the candidate
 
-        if (real_distr(uniform) <= q) h(z_first, p);  // possibly perturb the candidate
-
-        if (z_first != z_star) {
+        if (!comp_vectors(z_first, z_star)) {
             f_first = fQ(Q, z_first);
-            if (f_first < f_star) {  // f_first is better than f_star
-                swap(z_first, z_star);
+            if (f_first < f_star) {     // f_first is better
+                swap(z_first, z_star);  // z_first is better
                 f_star = f_first;
                 P_star = P;
                 e = 0;
@@ -180,7 +172,7 @@ VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
 
             } else {
                 d++;
-                if (real_distr(uniform) <= simulated_annealing(f_first, f_star, p)) {
+                if (d_real_uniform(e_uniform_ann) <= simulated_annealing(f_first, f_star, p)) {
                     swap(z_first, z_star);
                     f_star = f_first;
                     P_star = P;
@@ -190,12 +182,14 @@ VectorXf solve(MatrixXf Q, SparseMatrix<bool> A) {
 
             lambda = min(lambda0, i, e);
 
-        } else
+        } else {
             e++;
+        }
 
         i++;
-
-    } while (i < imax && (e + d < Nmax || d > dmin));  //Da riguardare
-
+    } while (i <= imax && (e + d < Nmax || d > dmin));
+    cout << endl
+         << f_star << endl
+         << endl;
     return z_star;
 }
