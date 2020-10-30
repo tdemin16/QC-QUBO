@@ -1,7 +1,7 @@
 #include "lib.h"
 
 MatrixXf g(MatrixXf P, float pr) {
-    int n = P.rows();
+    int n = P.outerSize();
     map<int, int> m;
     MatrixXf P_first(n, n);
 
@@ -36,8 +36,8 @@ void shuffle(map<int, int> &m) {
         keys.push_back(i.first);  //add m's keys to keys vector
     }
 
-    // Shuffle
-    random_shuffle(keys.begin(), keys.end());
+// Shuffle
+    random_shuffle(keys.begin(), keys.end(), myrandom);
 
     vector<int>::iterator it = keys.begin();
     //substitute old keys with new ones (shuffled)
@@ -49,12 +49,14 @@ void shuffle(map<int, int> &m) {
     }
 }
 
+int myrandom (int i) { return std::rand()%i;}
+
 float fQ(MatrixXf Q, VectorXf x) {
     return x.transpose() * Q * x;
 }
 
 void h(VectorXf &z, float pr) {
-    int n = z.cols();
+    int n = z.size();
 
     for (int i = 0; i < n; i++) {
         if (d_real_uniform(e_uniform_h) <= pr) z(i) = -z(i);
@@ -74,19 +76,29 @@ float min(float lambda0, int i, int e) {
 }
 
 void init_seeds() {
+#ifndef DEBUG
     seed_g = rd() ^ rd();
     seed_h = rd() ^ rd();
     seed_ann = rd() ^ rd();
     seed_pert = rd() ^ rd();
+    seed_shuffle = rd() ^ rd();
+#else
+    seed_g = 100000;
+    seed_h = 200000;
+    seed_ann = 300000;
+    seed_pert = 400000;
+    seed_shuffle = 500000;
+#endif
 
     e_uniform_g.seed(seed_g);
     e_uniform_h.seed(seed_h);
     e_uniform_ann.seed(seed_ann);
     e_uniform_pert.seed(seed_pert);
+    e_uniform_shuffle.seed(seed_shuffle);
 }
 
 bool comp_vectors(VectorXf z1, VectorXf z2) {
-    for (int i = 0; i < z1.cols(); i++) {
+    for (int i = 0; i < z1.size(); i++) {
         if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
     }
     return true;
@@ -95,14 +107,15 @@ bool comp_vectors(VectorXf z1, VectorXf z2) {
 SparseMatrix<float> init_A(int n) {
     SparseMatrix<float> A(n, n);  //Chimera Topology
     vector<Triplet<float>> t;
-    t.reserve(10 * n);             // |E| ~ 5n => 2 entries per edge = 10n
+    t.reserve(11 * n);             // |E| ~ 5n * 2 entries per edge + |V| = n => 10*n + n = 11n
     int block;                     // Current block (a block is made by the 8 nodes that form a bipartite subgraph)
     int row;                       // Current row of blocks
     for (int i = 0; i < n; i++) {  //For each node
         block = i / 8;
         row = i / (8 * 16);
-        if (i % 8 < 4) {                   // if i is in the "left" side of its subgraph
-            for (int j = 4; j < 8; j++) {  // Insert a forward edge
+        t.push_back(Triplet<float>(i, i, 1));  // Insert 1 on the diagonal
+        if (i % 8 < 4) {                       // if i is in the "left" side of its subgraph
+            for (int j = 4; j < 8; j++) {      // Insert a forward edge
                 if (block * 8 + j < n) t.push_back(Triplet<float>(i, block * 8 + j, 1));
             }
             if (i + 8 * 16 < n) t.push_back(Triplet<float>(i, i + 8 * 16, 1));   // if i's corresponding in the following row exists (n is large enough) put a forward edge
@@ -132,21 +145,22 @@ VectorXf min_energy(SparseMatrix<float> theta) {
 
     min = E(theta, x);
     x_min = x;
+    i = 1;
     do {
-        increment(x, n);
+        increment(x);
         e = E(theta, x);
         if (e < min) {
             x_min = x;
             min = e;
-            cout << min << " ";
         }
         i++;
     } while (i < N);
-    cout << endl;
+
     return x_min;
 }
 
-void increment(VectorXf &v, int n) {  // O(1) per l'analisi ammortizzata
+void increment(VectorXf &v) {  // O(1) per l'analisi ammortizzata
+    int n = v.size();
     int i = 0;
     while (i < n && v(i) == 1) {
         v(i) = -1;
@@ -169,4 +183,14 @@ float E(SparseMatrix<float> theta, VectorXf x) {
         }
     }
     return e;
+}
+
+void log(VectorXf z_star, float f_star, float lambda, float p, int e, int d, bool perturbed, bool simul_ann, int i) {
+    cout << "---Current status at " << i << "th iteration---" << endl
+         << "Best so far: f*=" << f_star << "\tz*=" << z_star.transpose() << endl
+         << "λ=" << lambda << "\tp=" << p << "\te=" << e << "\td=" << d;
+    if (perturbed) cout << "\tperturbed";
+    if (simul_ann) cout << "\tsimulated annealing";
+    cout << endl
+         << endl;
 }
