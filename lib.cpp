@@ -1,107 +1,28 @@
 #include "lib.h"
 
-MatrixXf g(MatrixXf P, float pr) {
-    int n = P.outerSize();
-    map<int, int> m;
-    MatrixXf P_first(n, n);
-
-    // with probability pr inserts i in the map with key i
-    for (int i = 0; i < n; i++) {
-        if (d_real_uniform(e_uniform_g) <= pr) {  // checks if the extracted numeber is equal or less than pr
-            m.insert(pair<int, int>(i, i));       //if it is, inserts the number
-        }
-    }
-
-    // shuffle keys
-    shuffle(m);
-
-    auto end = m.end();  // Used do determine whether the function find fails
-    for (int i = 0; i < n; i++) {
-        auto search = m.find(i);
-        if (search != end) {  //if the element is found
-            P_first.row(i) = P.row(m.at(i));
-        } else {
-            P_first.row(i) = P.row(i);
-        }
-    }
-
-    //P_first is a permutation of P
-    return P_first;
-}
-
-void shuffle(map<int, int> &m) {
-    vector<int> keys;  //Vector containing keys of m
-
-    for (auto i : m) {
-        keys.push_back(i.first);  //add m's keys to keys vector
-    }
-
-// Shuffle
-    random_shuffle(keys.begin(), keys.end(), myrandom);
-
-    vector<int>::iterator it = keys.begin();
-    //substitute old keys with new ones (shuffled)
-    for (auto &i : m) {
-        int ts = i.second;
-        i.second = m[*it];
-        m[*it] = ts;
-        it++;
-    }
-}
-
-int myrandom (int i) { return std::rand()%i;}
-
-float fQ(MatrixXf Q, VectorXf x) {
-    return x.transpose() * Q * x;
-}
-
-void h(VectorXf &z, float pr) {
-    int n = z.size();
-
-    for (int i = 0; i < n; i++) {
-        if (d_real_uniform(e_uniform_h) <= pr) z(i) = -z(i);
-    }
-}
-
-float simulated_annealing(float f_first, float f_star, float p) {
-    float T = -1 / log(p);
-    return exp(-(f_first - f_star) / T);
-}
-
-float min(float lambda0, int i, int e) {
-    float lambda_first = lambda0 / (2 + i - e);
-
-    if (lambda0 < lambda_first) return lambda0;
-    return lambda_first;
-}
-
 void init_seeds() {
-#ifndef DEBUG
+    //#ifndef DEBUG
     seed_g = rd() ^ rd();
     seed_h = rd() ^ rd();
     seed_ann = rd() ^ rd();
     seed_pert = rd() ^ rd();
     seed_shuffle = rd() ^ rd();
-#else
+    seed_vector = rd() ^ rd();
+    /*#else
     seed_g = 100000;
     seed_h = 200000;
     seed_ann = 300000;
     seed_pert = 400000;
     seed_shuffle = 500000;
-#endif
+    seed_vector = 600000;
+#endif*/
 
     e_uniform_g.seed(seed_g);
     e_uniform_h.seed(seed_h);
     e_uniform_ann.seed(seed_ann);
     e_uniform_pert.seed(seed_pert);
     e_uniform_shuffle.seed(seed_shuffle);
-}
-
-bool comp_vectors(VectorXf z1, VectorXf z2) {
-    for (int i = 0; i < z1.size(); i++) {
-        if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
-    }
-    return true;
+    e_uniform_vector.seed(seed_vector);
 }
 
 SparseMatrix<float> init_A(int n) {
@@ -133,19 +54,158 @@ SparseMatrix<float> init_A(int n) {
     return A;
 }
 
+float fQ(MatrixXf Q, VectorXf x) {
+    return x.transpose() * Q * x;
+}
+
+MatrixXf g(MatrixXf P, float pr) {
+    int n = P.outerSize();
+    map<int, int> m;
+    MatrixXf P_first(n, n);
+
+    // with probability pr inserts i in the map with key i
+    for (int i = 0; i < n; i++) {
+        if (d_real_uniform(e_uniform_g) <= pr) {  // checks if the extracted numeber is equal or less than pr
+            m.insert(pair<int, int>(i, i));       //if it is, inserts the number
+        }
+    }
+
+    // shuffle keys
+    shuffle_map(m);
+
+    auto end = m.end();  // Used do determine whether the function find fails
+    for (int i = 0; i < n; i++) {
+        auto search = m.find(i);
+        if (search != end) {  //if the element is found
+            P_first.row(i) = P.row(m.at(i));
+        } else {
+            P_first.row(i) = P.row(i);
+        }
+    }
+
+    //P_first is a permutation of P
+    return P_first;
+}
+
+SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> permutation,double pr){
+    int n = Q.outerSize();
+    map<int, int> m;
+    vector<int> not_selected;
+    SparseMatrix<float> theta(n, n);
+    vector<Triplet<float>> t;
+    t.reserve(11*n); // A = (V, E) => |t| = |E| + |V|
+    int r, c;
+    double val;
+
+    // with probability pr inserts i in the map with key i
+    for (int i = 0; i < n; i++) {
+        if (d_real_uniform(e_uniform_g) <= pr) {  // checks if the extracted numeber is equal or less than pr
+            m.insert(pair<int, int>(i, i));       //if it is, inserts the number
+        } else {
+            not_selected.push_back(i);
+        }
+    }
+
+    shuffle_map(m);
+
+    permutation = inverse(fill(m, not_selected, n), n);
+
+    for (int i = 0; i < A.outerSize(); i++) {
+        for (SparseMatrix<float>::InnerIterator it(A, i); it; ++it) {
+            r = it.row();
+            c = it.col();
+            val = Q(permutation[r], permutation[c]);
+            t.push_back(Triplet<float>(r, c, val));
+        }
+    }
+    theta.setFromTriplets(t.begin(), t.end());
+
+    return theta;
+}
+
+void shuffle_map(map<int, int> &m) {
+    vector<int> keys;  //Vector containing keys of m
+
+    for (auto i : m) {
+        keys.push_back(i.first);  //add m's keys to keys vector
+    }
+
+    // Shuffle
+    shuffle_vector(keys);
+
+    vector<int>::iterator it = keys.begin();
+    //substitute old keys with new ones (shuffled)
+    for (auto &i : m) {
+        int ts = i.second;
+        i.second = m[*it];
+        m[*it] = ts;
+        it++;
+    }
+}
+
+void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
+    int n = v.size();
+    int j;
+
+    for (int i = n - 1; i >= 0; i--) {
+        j = d_int_uniform(e_uniform_vector) * i / 2047;
+        swap(v[i], v[j]);
+    }
+}
+
+vector<int> fill(map<int, int> m, vector<int> not_selected, int n) {
+    vector<int> filled(n);
+    auto end = m.end();
+    int j = 0;
+
+    for (int i = 0; i < n; i++) {
+        auto search = m.find(i);
+        if (search != end) {
+            filled[i] = m.at(i);
+        } else {
+            filled[i] = not_selected[j];
+            j++;
+        }
+    }
+
+    return filled;
+}
+
+vector<int> inverse(vector<int> permutation, int n) {
+    vector<int> inverted(n);
+    for(int i = 0; i < n; i++) {
+        inverted[permutation[i]] = i;
+    }
+    return inverted;
+}
+
+void h(VectorXf &z, float pr) {
+    int n = z.size();
+
+    for (int i = 0; i < n; i++) {
+        if (d_real_uniform(e_uniform_h) <= pr) z(i) = -z(i);
+    }
+}
+
+float min(float lambda0, int i, int e) {
+    float lambda_first = lambda0 / (2 + i - e);
+
+    if (lambda0 < lambda_first) return lambda0;
+    return lambda_first;
+}
+
 VectorXf min_energy(SparseMatrix<float> theta) {
     int n = theta.outerSize();
-    int N = pow(2, n);
-    int i;
+    unsigned long long N = pow(2, n);  // Overflow with n > 64, not a problem since is a simulation
     VectorXf x_min(n);
     VectorXf x(n);
-    float min;
-    float e;
-    for (i = 0; i < n; i++) x(i) = -1;
+    double min;
+    double e;
+    for (int i = 0; i < n; i++) x(i) = -1;
 
     min = E(theta, x);
     x_min = x;
-    i = 1;
+    unsigned long long i = 1;
     do {
         increment(x);
         e = E(theta, x);
@@ -155,22 +215,11 @@ VectorXf min_energy(SparseMatrix<float> theta) {
         }
         i++;
     } while (i < N);
-
     return x_min;
 }
 
-void increment(VectorXf &v) {  // O(1) per l'analisi ammortizzata
-    int n = v.size();
-    int i = 0;
-    while (i < n && v(i) == 1) {
-        v(i) = -1;
-        i++;
-    }
-    if (i < n) v(i) = 1;
-}
-
 float E(SparseMatrix<float> theta, VectorXf x) {
-    float e = 0;
+    double e = 0;
     int r, c;
     for (int i = 0; i < theta.outerSize(); i++) {
         for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
@@ -183,6 +232,28 @@ float E(SparseMatrix<float> theta, VectorXf x) {
         }
     }
     return e;
+}
+
+void increment(VectorXf &v) {  // O(1) per l'analisi ammortizzata
+    int n = v.size();
+    int i = 0;
+    while (i < n && v(i) == 1) {
+        v(i) = -1;
+        i++;
+    }
+    if (i < n) v(i) = 1;
+}
+
+float simulated_annealing(float f_first, float f_star, float p) {
+    float T = -1 / log(p);
+    return exp(-(f_first - f_star) / T);
+}
+
+bool comp_vectors(VectorXf z1, VectorXf z2) {
+    for (int i = 0; i < z1.size(); i++) {
+        if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
+    }
+    return true;
 }
 
 void log(VectorXf z_star, float f_star, float lambda, float p, int e, int d, bool perturbed, bool simul_ann, int i) {
