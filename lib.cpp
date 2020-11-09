@@ -87,13 +87,13 @@ MatrixXf g(MatrixXf P, float pr) {
     return P_first;
 }
 
-SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> permutation,double pr){
+SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> &permutation, vector<int> old_permutation, double pr) {
     int n = Q.outerSize();
     map<int, int> m;
-    vector<int> not_selected;
     SparseMatrix<float> theta(n, n);
+    vector<int> inversed(n);
     vector<Triplet<float>> t;
-    t.reserve(11*n); // A = (V, E) => |t| = |E| + |V|
+    t.reserve(11 * n);  // A = (V, E) => |t| = |E| + |V|
     int r, c;
     double val;
 
@@ -101,20 +101,19 @@ SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> perm
     for (int i = 0; i < n; i++) {
         if (d_real_uniform(e_uniform_g) <= pr) {  // checks if the extracted numeber is equal or less than pr
             m.insert(pair<int, int>(i, i));       //if it is, inserts the number
-        } else {
-            not_selected.push_back(i);
         }
     }
 
     shuffle_map(m);
 
-    permutation = inverse(fill(m, not_selected, n), n);
+    permutation = fill(m, old_permutation, n);
+    inversed = inverse(permutation, n);
 
     for (int i = 0; i < A.outerSize(); i++) {
         for (SparseMatrix<float>::InnerIterator it(A, i); it; ++it) {
             r = it.row();
             c = it.col();
-            val = Q(permutation[r], permutation[c]);
+            val = Q(inversed[r], inversed[c]);
             t.push_back(Triplet<float>(r, c, val));
         }
     }
@@ -153,18 +152,16 @@ void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     }
 }
 
-vector<int> fill(map<int, int> m, vector<int> not_selected, int n) {
+vector<int> fill(map<int, int> m, vector<int> permutation, int n) {
     vector<int> filled(n);
     auto end = m.end();
-    int j = 0;
 
     for (int i = 0; i < n; i++) {
         auto search = m.find(i);
         if (search != end) {
-            filled[i] = m.at(i);
+            filled[i] = permutation[m.at(i)];
         } else {
-            filled[i] = not_selected[j];
-            j++;
+            filled[i] = permutation[i];
         }
     }
 
@@ -173,7 +170,7 @@ vector<int> fill(map<int, int> m, vector<int> not_selected, int n) {
 
 vector<int> inverse(vector<int> permutation, int n) {
     vector<int> inverted(n);
-    for(int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         inverted[permutation[i]] = i;
     }
     return inverted;
@@ -254,6 +251,19 @@ bool comp_vectors(VectorXf z1, VectorXf z2) {
         if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
     }
     return true;
+}
+
+SparseMatrix<float> gen_P(vector<int> perm) {
+    long unsigned n = perm.size();
+    SparseMatrix<float> P(n, n);
+    vector<Triplet<float>> t;
+
+    for (long unsigned i = 0; i < n; i++) {
+        t.push_back(Triplet<float>(i, perm[i], 1));
+    }
+    P.setFromTriplets(t.begin(), t.end());
+
+    return P;
 }
 
 void log(VectorXf z_star, float f_star, float lambda, float p, int e, int d, bool perturbed, bool simul_ann, int i) {

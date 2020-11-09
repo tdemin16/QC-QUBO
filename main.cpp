@@ -11,7 +11,7 @@
 using namespace std;
 using namespace Eigen;
 
-#define n 16 // number of coefficients (has to be 8*x)
+#define n 16  // number of coefficients (has to be 8*x)
 
 VectorXf solve(MatrixXf);
 
@@ -48,22 +48,22 @@ int main() {
     temp.transposeInPlace();
     Q += temp;  // Add itself but transposed -> symmetric matrix
 #else
-    Q << 0,  0.2,  9.7,  9.5, -4.6, -8.2,  4.7, -3.4, -3.5,    6,  0.2,  6.3,  8.6,  8.7,  7.8,  3.9,
-       0.2,    1, -0.1, -7.1, -5.5,  9.3,  6.8, -7.7,  6.7,   -3, -3.5, -6.9,    9,  4.6, -6.2, -0.4,
-       9.7, -0.1,    2, -1.9, -0.3,  9.8, -2.3, -0.9, -9.9, -5.5, -6.2, -3.2,    1,  4.8,    2, -7.7,
-       9.5, -7.1, -1.9,    3,  3.3,  0.7,  5.1, -7.9, -9.5,    8, -8.3,  9.8,  4.7,  9.1,  6.4,  6.7,
-      -4.6, -5.5, -0.3,  3.3,    4, -4.5,  4.6,  5.7,  -10,  3.4, -4.8, -1.9,   -7,   10,  0.8,  2.2,
-      -8.2,  9.3,  9.8,  0.7, -4.5,    5, -9.9,  5.4,    6, -8.1, -8.7,  0.7,  3.9, -6.4,    9, -5.5,
-       4.7,  6.8, -2.3,  5.1,  4.6, -9.9,    6,  3.7, -8.9,  -10,  1.6,  7.9,  4.8, -8.8,  6.9,  1.2,
-      -3.4, -7.7, -0.9, -7.9,  5.7,  5.4,  3.7,    7,    8, -7.7, -9.3, -1.4,  7.4,  4.1,  3.8, -9.5,
-      -3.5,  6.7, -9.9, -9.5,  -10,    6, -8.9,    8,    8,  2.1,  3.7,  1.3, -5.8, -1.2, -8.4,  5.2,
-         6,   -3, -5.5,    8,  3.4, -8.1,  -10, -7.7,  2.1,    9,  0.7,  8.1, -4.2,  9.7,  6.7,  9.9,
-       0.2, -3.5, -6.2, -8.3, -4.8, -8.7,  1.6, -9.3,  3.7,  0.7,   10,  9.2,  0.4,    6,  9.3,    7,
-       6.3, -6.9, -3.2,  9.8, -1.9,  0.7,  7.9, -1.4,  1.3,  8.1,  9.2,   11,  3.8,    4,  8.3,  0.6,
-       8.6,    9,    1,  4.7,   -7,  3.9,  4.8,  7.4, -5.8, -4.2,  0.4,  3.8,   12, -9.9,  1.2, -2.1,
-       8.7,  4.6,  4.8,  9.1,   10, -6.4, -8.8,  4.1, -1.2,  9.7,    6,    4, -9.9,   13,  5.9,  9.8,
-       7.8, -6.2,    2,  6.4,  0.8,    9,  6.9,  3.8, -8.4,  6.7,  9.3,  8.3,  1.2,  5.9,   14, -9.8,
-       3.9, -0.4, -7.7,  6.7,  2.2, -5.5,  1.2, -9.5,  5.2,  9.9,    7,  0.6, -2.1,  9.8, -9.8,   15;
+    Q << 0, 0.2, 9.7, 9.5, -4.6, -8.2, 4.7, -3.4, -3.5, 6, 0.2, 6.3, 8.6, 8.7, 7.8, 3.9,
+        0.2, 1, -0.1, -7.1, -5.5, 9.3, 6.8, -7.7, 6.7, -3, -3.5, -6.9, 9, 4.6, -6.2, -0.4,
+        9.7, -0.1, 2, -1.9, -0.3, 9.8, -2.3, -0.9, -9.9, -5.5, -6.2, -3.2, 1, 4.8, 2, -7.7,
+        9.5, -7.1, -1.9, 3, 3.3, 0.7, 5.1, -7.9, -9.5, 8, -8.3, 9.8, 4.7, 9.1, 6.4, 6.7,
+        -4.6, -5.5, -0.3, 3.3, 4, -4.5, 4.6, 5.7, -10, 3.4, -4.8, -1.9, -7, 10, 0.8, 2.2,
+        -8.2, 9.3, 9.8, 0.7, -4.5, 5, -9.9, 5.4, 6, -8.1, -8.7, 0.7, 3.9, -6.4, 9, -5.5,
+        4.7, 6.8, -2.3, 5.1, 4.6, -9.9, 6, 3.7, -8.9, -10, 1.6, 7.9, 4.8, -8.8, 6.9, 1.2,
+        -3.4, -7.7, -0.9, -7.9, 5.7, 5.4, 3.7, 7, 8, -7.7, -9.3, -1.4, 7.4, 4.1, 3.8, -9.5,
+        -3.5, 6.7, -9.9, -9.5, -10, 6, -8.9, 8, 8, 2.1, 3.7, 1.3, -5.8, -1.2, -8.4, 5.2,
+        6, -3, -5.5, 8, 3.4, -8.1, -10, -7.7, 2.1, 9, 0.7, 8.1, -4.2, 9.7, 6.7, 9.9,
+        0.2, -3.5, -6.2, -8.3, -4.8, -8.7, 1.6, -9.3, 3.7, 0.7, 10, 9.2, 0.4, 6, 9.3, 7,
+        6.3, -6.9, -3.2, 9.8, -1.9, 0.7, 7.9, -1.4, 1.3, 8.1, 9.2, 11, 3.8, 4, 8.3, 0.6,
+        8.6, 9, 1, 4.7, -7, 3.9, 4.8, 7.4, -5.8, -4.2, 0.4, 3.8, 12, -9.9, 1.2, -2.1,
+        8.7, 4.6, 4.8, 9.1, 10, -6.4, -8.8, 4.1, -1.2, 9.7, 6, 4, -9.9, 13, 5.9, 9.8,
+        7.8, -6.2, 2, 6.4, 0.8, 9, 6.9, 3.8, -8.4, 6.7, 9.3, 8.3, 1.2, 5.9, 14, -9.8,
+        3.9, -0.4, -7.7, 6.7, 2.2, -5.5, 1.2, -9.5, 5.2, 9.9, 7, 0.6, -2.1, 9.8, -9.8, 15;
 #endif
 
     VectorXf sol = solve(Q);
@@ -109,32 +109,37 @@ VectorXf solve(MatrixXf Q) {
 
     //Algorithm
     MatrixXf Q_first(n, n);
-    MatrixXf P(n, n), P1(n, n), P2(n, n), P_star(n, n);
     SparseMatrix<float> theta1(n, n), theta2(n, n), theta_first;
     VectorXf z_star(n), z_first(n), z1(n), z2(n);
     MatrixXf z_diag(n, n);
     MatrixXf S(n, n);  //Tabu Matrix
-    vector<int> perm(n);
+    vector<int> perm(n), perm_star(n), perm1(n), perm2(n);
     double f1, f2, f_star, f_first;
-    double p;                 // probability of an element to be considered for shuffling
+    double p = 1;             // probability of an element to be considered for shuffling
     int e = 0;                // Number of solutions that equal the best
     int d = 0;                // Number of solutions that are sub optimal
     double lambda = lambda0;  // Tabu weight
     bool perturbed;           // True when h perturbs the candidate
     bool simul_ann;
 
-    P = In;
-    p = 1.0f;
+    for (int i = 0; i < n; i++) {
+        perm[i] = i;
+        perm1[i] = i;
+        perm2[i] = i;
+    }
 
-    P1 = g(P, p);
-    P2 = g(P, p);
-
-    theta1 = (P1.transpose() * Q * P1).cwiseProduct(A);
-    theta2 = (P2.transpose() * Q * P2).cwiseProduct(A);
+    theta1 = g_strong(Q, A, perm1, perm1, p);
+    theta2 = g_strong(Q, A, perm2, perm2, p);
 
 #ifdef SIMULATION
-    z1 = P1.transpose() * min_energy(theta1);
-    z2 = P2.transpose() * min_energy(theta2);
+    //vettore di permutazione generare matrice P
+    SparseMatrix<float> P;
+
+    P = gen_P(perm1);
+    z1 = P.transpose() * min_energy(theta1);
+
+    P = gen_P(perm2);
+    z2 = P.transpose() * min_energy(theta2);
 #else
     //Call annealer
 #endif
@@ -145,12 +150,12 @@ VectorXf solve(MatrixXf Q) {
     if (f1 < f2) {    // f1 is better
         z_star = z1;  // Best
         f_star = f1;
-        P_star = P1;
+        perm_star = perm1;
         z_first = z2;  // Worst
     } else {           // f2 is better
         z_star = z2;
         f_star = f2;
-        P_star = P2;
+        perm_star = perm2;
         z_first = z1;
     }
 
@@ -171,9 +176,9 @@ VectorXf solve(MatrixXf Q) {
 
         if (!(i % N)) p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
-        P = g(P_star, p);
-        theta_first = (P.transpose() * Q * P).cwiseProduct(A);
+        theta_first = g_strong(Q, A, perm, perm_star, p);
 #ifdef SIMULATION
+        P = gen_P(perm);
         z_first = P.transpose() * min_energy(theta_first);
 #else
         //Call annealer
@@ -188,7 +193,7 @@ VectorXf solve(MatrixXf Q) {
             if (f_first < f_star) {     // f_first is better
                 swap(z_first, z_star);  // z_first is better
                 f_star = f_first;
-                P_star = P;
+                perm_star = perm;
                 e = 0;
                 d = 0;
                 z_diag = z_first.asDiagonal();
@@ -199,7 +204,7 @@ VectorXf solve(MatrixXf Q) {
                 if (d_real_uniform(e_uniform_ann) <= simulated_annealing(f_first, f_star, p) && f_first > f_star) {
                     swap(z_first, z_star);
                     f_star = f_first;
-                    P_star = P;
+                    perm_star = perm;
                     e = 0;
                     simul_ann = true;
                 }

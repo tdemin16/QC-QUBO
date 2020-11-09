@@ -46,7 +46,7 @@ float fQ(MatrixXf Q, VectorXf x);
 // Return: Matrix of order n where some raws (with probability pr) are swapped
 MatrixXf g(MatrixXf P, float pr);
 
-SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> permutation,double pr);
+SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int>& permutation, vector<int> old_permutation, double pr);
 
 // Input: Map of n integer m
 // Shuffle the matrix
@@ -86,6 +86,8 @@ float simulated_annealing(float, float, float);
 // Input: 2 VectorXf
 // Return: true iff they are equal, false otherwise
 bool comp_vectors(VectorXf z1, VectorXf z2);
+
+SparseMatrix<float> gen_P(vector<int> perm);
 
 void log(VectorXf z_star, float f_star, float lambda, float p, int e, int d, bool perturbed, bool simul_ann, int i);
 
