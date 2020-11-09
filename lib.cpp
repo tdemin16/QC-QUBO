@@ -100,14 +100,14 @@ SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> &per
     // with probability pr inserts i in the map with key i
     for (int i = 0; i < n; i++) {
         if (d_real_uniform(e_uniform_g) <= pr) {  // checks if the extracted numeber is equal or less than pr
-            m.insert(pair<int, int>(i, i));       //if it is, inserts the number
+            m.insert(pair<int, int>(i, i));       // if it is, inserts the number
         }
     }
 
     shuffle_map(m);
 
-    permutation = fill(m, old_permutation, n);
-    inversed = inverse(permutation, n);
+    permutation = fill(m, old_permutation, n);  // Generates a vector of permuted + non permuted indexes
+    inversed = inverse(permutation, n);         // Inversed is used to know which pair row column is to be used to calculate the product Q ○ A
 
     for (int i = 0; i < A.outerSize(); i++) {
         for (SparseMatrix<float>::InnerIterator it(A, i); it; ++it) {
@@ -147,7 +147,7 @@ void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     int j;
 
     for (int i = n - 1; i >= 0; i--) {
-        j = d_int_uniform(e_uniform_vector) * i / 2047;
+        j = d_int_uniform(e_uniform_vector) * i / (n - 1);
         swap(v[i], v[j]);
     }
 }
@@ -158,10 +158,10 @@ vector<int> fill(map<int, int> m, vector<int> permutation, int n) {
 
     for (int i = 0; i < n; i++) {
         auto search = m.find(i);
-        if (search != end) {
-            filled[i] = permutation[m.at(i)];
-        } else {
-            filled[i] = permutation[i];
+        if (search != end) {                   // if index i is contained
+            filled[i] = permutation[m.at(i)];  // filled[i] is equal to the permutation vector at position permutation[m[i]]
+        } else {                               // if is not contained
+            filled[i] = permutation[i];        // the index is the same as the old permutation
         }
     }
 
@@ -176,7 +176,7 @@ vector<int> inverse(vector<int> permutation, int n) {
     return inverted;
 }
 
-void h(VectorXf &z, float pr) {
+void h(VectorXf &z, double pr) {
     int n = z.size();
 
     for (int i = 0; i < n; i++) {
@@ -184,8 +184,8 @@ void h(VectorXf &z, float pr) {
     }
 }
 
-float min(float lambda0, int i, int e) {
-    float lambda_first = lambda0 / (2 + i - e);
+double min(double lambda0, int i, int e) {
+    double lambda_first = lambda0 / (2 + i - e);
 
     if (lambda0 < lambda_first) return lambda0;
     return lambda_first;
@@ -215,7 +215,7 @@ VectorXf min_energy(SparseMatrix<float> theta) {
     return x_min;
 }
 
-float E(SparseMatrix<float> theta, VectorXf x) {
+double E(SparseMatrix<float> theta, VectorXf x) {
     double e = 0;
     int r, c;
     for (int i = 0; i < theta.outerSize(); i++) {
@@ -241,8 +241,8 @@ void increment(VectorXf &v) {  // O(1) per l'analisi ammortizzata
     if (i < n) v(i) = 1;
 }
 
-float simulated_annealing(float f_first, float f_star, float p) {
-    float T = -1 / log(p);
+double simulated_annealing(double f_first, double f_star, double p) {
+    double T = -1 / log(p);
     return exp(-(f_first - f_star) / T);
 }
 
@@ -253,6 +253,7 @@ bool comp_vectors(VectorXf z1, VectorXf z2) {
     return true;
 }
 
+#ifdef SIMULATION
 SparseMatrix<float> gen_P(vector<int> perm) {
     long unsigned n = perm.size();
     SparseMatrix<float> P(n, n);
@@ -266,12 +267,38 @@ SparseMatrix<float> gen_P(vector<int> perm) {
     return P;
 }
 
-void log(VectorXf z_star, float f_star, float lambda, float p, int e, int d, bool perturbed, bool simul_ann, int i) {
+double compute_Q(MatrixXf Q) {
+    int n = Q.outerSize();
+    VectorXf x_min(n);
+    VectorXf x(n);
+    unsigned long long N = pow(2, n);
+    double min, e;
+    for (int i = 0; i < n; i++) x(i) = -1;
+
+    min = fQ(Q, x);
+    x_min = x;
+    unsigned long long i = 1;
+    do {
+        increment(x);
+        e = fQ(Q, x);
+        if (e < min) {
+            x_min = x;
+            min = e;
+        }
+        i++;
+    } while (i < N);
+
+    return min;
+}
+
+void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
     cout << "---Current status at " << i << "th iteration---" << endl
          << "Best so far: f*=" << f_star << "\tz*=" << z_star.transpose() << endl
+         << "To reach: min=" << min << "\tf_gold=" << f_gold << endl
          << "λ=" << lambda << "\tp=" << p << "\te=" << e << "\td=" << d;
     if (perturbed) cout << "\tperturbed";
     if (simul_ann) cout << "\tsimulated annealing";
     cout << endl
          << endl;
 }
+#endif

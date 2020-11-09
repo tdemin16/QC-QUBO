@@ -28,8 +28,8 @@ unsigned int seed_ann;
 unsigned int seed_pert;
 unsigned int seed_vector;
 random_device rd;
-uniform_real_distribution<float> d_real_uniform(0.0, 1.0);
-uniform_int_distribution<int> d_int_uniform(0, 2048);  // 2048 max number of nodes
+uniform_real_distribution<double> d_real_uniform(0.0, 1.0);
+uniform_int_distribution<int> d_int_uniform(0, n);  // 2048 max number of nodes
 
 int main() {
     MatrixXf Q(n, n);  // QUBO Problem Matrix
@@ -85,12 +85,12 @@ VectorXf solve(MatrixXf Q) {
     init_seeds();
 
     //Input
-    float pmin = 0.1f;     // minimum probability 0 < pδ < 0.5 of permutation modification
-    float eta = 0.01f;     // probability decreasing rate η > 0
-    float q = 0.1f;        // candidate perturbation probability q > 0
-    float lambda0 = 1.0f;  // initial balancing factor λ0 > 0
-    int k = 1;             // number of annealer runs k ≥ 1
-    int N = 20;            // Decreasing time
+    double pmin = 0.1f;     // minimum probability 0 < pδ < 0.5 of permutation modification
+    double eta = 0.01f;     // probability decreasing rate η > 0
+    double q = 0.1f;        // candidate perturbation probability q > 0
+    double lambda0 = 1.0f;  // initial balancing factor λ0 > 0
+    int k = 1;              // number of annealer runs k ≥ 1
+    int N = 10;             // Decreasing time
 
     //Termination Parameters
     int imax = 2000;  // Max number of iteration
@@ -109,12 +109,12 @@ VectorXf solve(MatrixXf Q) {
 
     //Algorithm
     MatrixXf Q_first(n, n);
-    SparseMatrix<float> theta1(n, n), theta2(n, n), theta_first;
-    VectorXf z_star(n), z_first(n), z1(n), z2(n);
+    SparseMatrix<float> theta1(n, n), theta2(n, n), theta_first(n, n);
+    VectorXf z_star(n), z_first(n), z1(n), z2(n), z_gold(n);
     MatrixXf z_diag(n, n);
     MatrixXf S(n, n);  //Tabu Matrix
     vector<int> perm(n), perm_star(n), perm1(n), perm2(n);
-    double f1, f2, f_star, f_first;
+    double f1, f2, f_star, f_first, f_gold;
     double p = 1;             // probability of an element to be considered for shuffling
     int e = 0;                // Number of solutions that equal the best
     int d = 0;                // Number of solutions that are sub optimal
@@ -122,18 +122,20 @@ VectorXf solve(MatrixXf Q) {
     bool perturbed;           // True when h perturbs the candidate
     bool simul_ann;
 
+    // Initialization of perm vectors like an identity matrix of order n
     for (int i = 0; i < n; i++) {
         perm[i] = i;
         perm1[i] = i;
         perm2[i] = i;
     }
 
+    // Hadamard product between a permuted Q and A
     theta1 = g_strong(Q, A, perm1, perm1, p);
     theta2 = g_strong(Q, A, perm2, perm2, p);
 
 #ifdef SIMULATION
-    //vettore di permutazione generare matrice P
-    SparseMatrix<float> P;
+    double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
+    SparseMatrix<float> P;          // Used to map back the solutions according to the paper
 
     P = gen_P(perm1);
     z1 = P.transpose() * min_energy(theta1);
@@ -152,11 +154,17 @@ VectorXf solve(MatrixXf Q) {
         f_star = f1;
         perm_star = perm1;
         z_first = z2;  // Worst
-    } else {           // f2 is better
+
+        z_gold = z1;
+        f_gold = f1;
+    } else {  // f2 is better
         z_star = z2;
         f_star = f2;
         perm_star = perm2;
         z_first = z1;
+
+        z_gold = z2;
+        f_gold = f2;
     }
 
     // f1 and f2 are floats -> float comparison
@@ -167,7 +175,7 @@ VectorXf solve(MatrixXf Q) {
         S = MatrixXf::Zero(n, n);
     }
 
-    int i = 0;
+    int i = 1;
     do {
         perturbed = false;
         simul_ann = false;
@@ -210,6 +218,11 @@ VectorXf solve(MatrixXf Q) {
                 }
             }
 
+            if (f_first < f_gold) {
+                z_gold = z_first;
+                f_gold = f_first;
+            }
+
             lambda = min(lambda0, i, e);
 
         } else {
@@ -217,7 +230,7 @@ VectorXf solve(MatrixXf Q) {
         }
 
 #ifdef SIMULATION
-        log(z_star, f_star, lambda, p, e, d, perturbed, simul_ann, i + 1);
+        log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i + 1);
 #endif
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
@@ -225,11 +238,11 @@ VectorXf solve(MatrixXf Q) {
     printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
     printf("k:%d\n", k);
     printf("imax:%d, Nmax:%d, dmin:%d\n", imax, Nmax, dmin);
-    printf("e:%d\td:%d\ti:%d", e, d, i);
+    printf("e:%d\td:%d\ti:%d\n", e, d, i);
 
     cout << endl
-         << "f*: " << f_star << endl
+         << "f_gold: " << f_gold << endl
          << endl;
 
-    return z_star;
+    return z_gold;
 }
