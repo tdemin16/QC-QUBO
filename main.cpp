@@ -180,7 +180,7 @@ VectorXf solve(MatrixXf Q) {
 
         if (!(i % N)) p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
-        theta_first = g_strong(Q, A, perm, perm_star, p);
+        theta_first = g_strong(Q_first, A, perm, perm_star, p);
 #ifdef SIMULATION
         z_first = map_back(min_energy(theta_first), perm);
 #else
