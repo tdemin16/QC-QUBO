@@ -135,13 +135,9 @@ VectorXf solve(MatrixXf Q) {
 
 #ifdef SIMULATION
     double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
-    SparseMatrix<float> P;          // Used to map back the solutions according to the paper
 
-    P = gen_P(perm1);
-    z1 = P.transpose() * min_energy(theta1);
-
-    P = gen_P(perm2);
-    z2 = P.transpose() * min_energy(theta2);
+    z1 = map_back(min_energy(theta1), perm1);
+    z2 = map_back(min_energy(theta2), perm2);
 #else
     //Call annealer
 #endif
@@ -170,7 +166,7 @@ VectorXf solve(MatrixXf Q) {
     // f1 and f2 are floats -> float comparison
     if (abs(f1 - f2) > __FLT_EPSILON__) {  // if(f1 != f2)
         z_diag = z_first.asDiagonal();     // Matrix where the diagonal is made by elemnt of z_first
-        S = kroneckerProduct(z1, z1.transpose()) - In + z_diag;
+        S = kroneckerProduct(z_first, z_first.transpose()) - In + z_diag;
     } else {
         S = MatrixXf::Zero(n, n);
     }
@@ -186,8 +182,7 @@ VectorXf solve(MatrixXf Q) {
 
         theta_first = g_strong(Q, A, perm, perm_star, p);
 #ifdef SIMULATION
-        P = gen_P(perm);
-        z_first = P.transpose() * min_energy(theta_first);
+        z_first = map_back(min_energy(theta_first), perm);
 #else
         //Call annealer
 #endif
@@ -205,7 +200,7 @@ VectorXf solve(MatrixXf Q) {
                 e = 0;
                 d = 0;
                 z_diag = z_first.asDiagonal();
-                S = S + kroneckerProduct(z1, z1.transpose()) - In + z_diag;
+                S = S + kroneckerProduct(z_first, z_first.transpose()) - In + z_diag;
 
             } else {
                 d++;
@@ -230,7 +225,7 @@ VectorXf solve(MatrixXf Q) {
         }
 
 #ifdef SIMULATION
-        log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i + 1);
+        log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
 #endif
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
@@ -238,7 +233,7 @@ VectorXf solve(MatrixXf Q) {
     printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
     printf("k:%d\n", k);
     printf("imax:%d, Nmax:%d, dmin:%d\n", imax, Nmax, dmin);
-    printf("e:%d\td:%d\ti:%d\n", e, d, i);
+    printf("e:%d\td:%d\ti:%d\n", e, d, i-1);
 
     cout << endl
          << "f_gold: " << f_gold << endl

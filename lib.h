@@ -58,13 +58,13 @@ void shuffle_map(map<int, int> &m);
 // Shuffle the vector according to Fisher and Yates' algorithm. Used to shuffle the map
 void shuffle_vector(vector<int> &v);
 
-// Input: map of permuted indexes, vector of indexes not permuted, dimension n
+// Input: map of permuted indexes, vector of indexes not permuted
 // Return: vector containing permuted and not permuted indexes in the correct position
-vector<int> fill(map<int, int> m, vector<int> permutation, int n);
+vector<int> fill(map<int, int> m, vector<int> permutation);
 
 // Input: Permutation vector
 // Return: Vector in which values and indexes are swapped
-vector<int> inverse(vector<int> permutation, int n);
+vector<int> inverse(vector<int> permutation);
 
 // Input: Vector of n integers z, probability pr
 // With probability pr, the element zi = -zi
@@ -85,6 +85,8 @@ double E(SparseMatrix<float> theta, VectorXf x);
 // Input: VectorXf of {-1, 1}^n v
 // Treats the vector as a binary number but made of -1 and 1(instead of 0 and 1). Performs the increment
 void increment(VectorXf &v);
+
+VectorXf map_back(VectorXf z, vector<int> perm);
 
 // Returns the probabilty of commuting
 double simulated_annealing(double, double, double);

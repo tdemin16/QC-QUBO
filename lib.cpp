@@ -106,8 +106,8 @@ SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> &per
 
     shuffle_map(m);
 
-    permutation = fill(m, old_permutation, n);  // Generates a vector of permuted + non permuted indexes
-    inversed = inverse(permutation, n);         // Inversed is used to know which pair row column is to be used to calculate the product Q ○ A
+    permutation = fill(m, old_permutation);  // Generates a vector of permuted + non permuted indexes
+    inversed = inverse(permutation);         // Inversed is used to know which pair row column is to be used to calculate the product Q ○ A
 
     for (int i = 0; i < A.outerSize(); i++) {
         for (SparseMatrix<float>::InnerIterator it(A, i); it; ++it) {
@@ -130,7 +130,7 @@ void shuffle_map(map<int, int> &m) {
     }
 
     // Shuffle
-    shuffle_vector(keys);
+    shuffle(keys.begin(), keys.end(), e_uniform_vector);
 
     vector<int>::iterator it = keys.begin();
     //substitute old keys with new ones (shuffled)
@@ -142,6 +142,7 @@ void shuffle_map(map<int, int> &m) {
     }
 }
 
+// Not used
 void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     int n = v.size();
     int j;
@@ -152,7 +153,8 @@ void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     }
 }
 
-vector<int> fill(map<int, int> m, vector<int> permutation, int n) {
+vector<int> fill(map<int, int> m, vector<int> permutation) {
+    int n = permutation.size();
     vector<int> filled(n);
     auto end = m.end();
 
@@ -168,7 +170,8 @@ vector<int> fill(map<int, int> m, vector<int> permutation, int n) {
     return filled;
 }
 
-vector<int> inverse(vector<int> permutation, int n) {
+vector<int> inverse(vector<int> permutation) {
+    int n = permutation.size();
     vector<int> inverted(n);
     for (int i = 0; i < n; i++) {
         inverted[permutation[i]] = i;
@@ -241,6 +244,18 @@ void increment(VectorXf &v) {  // O(1) per l'analisi ammortizzata
     if (i < n) v(i) = 1;
 }
 
+VectorXf map_back(VectorXf z, vector<int> perm) {
+    int n = perm.size();
+    vector<int> inverted = inverse(perm);
+    VectorXf z_ret(n);
+
+    for (int i = 0; i < n; i++) {
+        z_ret(i) = z(inverted[i]);
+    }
+
+    return z_ret;
+}
+
 double simulated_annealing(double f_first, double f_star, double p) {
     double T = -1 / log(p);
     return exp(-(f_first - f_star) / T);
@@ -258,6 +273,7 @@ SparseMatrix<float> gen_P(vector<int> perm) {
     long unsigned n = perm.size();
     SparseMatrix<float> P(n, n);
     vector<Triplet<float>> t;
+    t.reserve(n);
 
     for (long unsigned i = 0; i < n; i++) {
         t.push_back(Triplet<float>(i, perm[i], 1));
