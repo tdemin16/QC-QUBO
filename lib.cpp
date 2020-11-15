@@ -314,7 +314,5 @@ void log(VectorXf z_star, double f_star, double min, double f_gold, double lambd
          << "λ=" << lambda << "\tp=" << p << "\te=" << e << "\td=" << d;
     if (perturbed) cout << "\tperturbed";
     if (simul_ann) cout << "\tsimulated annealing";
-    cout << endl
-         << endl;
 }
 #endif

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <map>
 #include <random>
+#include <chrono>
 
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
