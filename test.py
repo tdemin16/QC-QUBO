@@ -1,0 +1,2 @@
+import annealer
+annealer.solve()

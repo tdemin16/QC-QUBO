@@ -8,6 +8,10 @@
 #include <map>
 #include <random>
 #include <chrono>
+#include <string>
+#ifndef SIMULATION
+#include <Python.h>
+#endif
 
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
@@ -16,21 +20,21 @@
 using namespace std;
 using namespace Eigen;
 
-extern mt19937 e_uniform_g;
-extern mt19937 e_uniform_h;
-extern mt19937 e_uniform_shuffle;
-extern mt19937 e_uniform_ann;
-extern mt19937 e_uniform_pert;
-extern mt19937 e_uniform_vector;
-extern unsigned int seed_g;
-extern unsigned int seed_h;
-extern unsigned int seed_shuffle;
-extern unsigned int seed_ann;
-extern unsigned int seed_pert;
-extern unsigned int seed_vector;
+extern mt19937_64 e_uniform_g;
+extern mt19937_64 e_uniform_h;
+extern mt19937_64 e_uniform_shuffle;
+extern mt19937_64 e_uniform_ann;
+extern mt19937_64 e_uniform_pert;
+extern mt19937_64 e_uniform_vector;
+extern unsigned long long seed_g;
+extern unsigned long long seed_h;
+extern unsigned long long seed_shuffle;
+extern unsigned long long seed_ann;
+extern unsigned long long seed_pert;
+extern unsigned long long seed_vector;
 extern random_device rd;
 extern uniform_real_distribution<double> d_real_uniform;
-extern uniform_int_distribution<int> d_int_uniform;
+extern uniform_int_distribution<unsigned long long> d_int_uniform;
 
 // init seed in order to generate random numbers
 void init_seeds();
@@ -49,7 +53,7 @@ MatrixXf g(MatrixXf P, float pr);
 
 // Input: Matrix Q, SparseMatrix A, vector in which store the new permutation, vector from which generate the new permutation, probability of permutation
 // Return: Matrix theta containing the product P^T * Q * P ○ A. permutation will contain the new permutation of indexes. Complexity O(nlogn)
-SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int>& permutation, vector<int> old_permutation, double pr);
+SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> &permutation, vector<int> old_permutation, double pr);
 
 // Input: Map of n integer m
 // Shuffle the matrix
@@ -66,6 +70,10 @@ vector<int> fill(map<int, int> m, vector<int> permutation);
 // Input: Permutation vector
 // Return: Vector in which values and indexes are swapped
 vector<int> inverse(vector<int> permutation);
+
+#ifndef SIMULATION
+VectorXf annealer(SparseMatrix<float> theta);
+#endif
 
 // Input: Vector of n integers z, probability pr
 // With probability pr, the element zi = -zi
@@ -102,4 +110,4 @@ double compute_Q(MatrixXf Q);
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
 #endif
 
-#endif  //LIB_H
+#endif //LIB_H

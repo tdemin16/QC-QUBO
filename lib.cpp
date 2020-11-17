@@ -130,7 +130,9 @@ void shuffle_map(map<int, int> &m) {
     }
 
     // Shuffle
-    shuffle(keys.begin(), keys.end(), e_uniform_vector);
+    //shuffle(keys.begin(), keys.end(), e_uniform_vector);
+    //random_shuffle(keys.begin(), keys.end());
+    shuffle_vector(keys);
 
     vector<int>::iterator it = keys.begin();
     //substitute old keys with new ones (shuffled)
@@ -148,7 +150,7 @@ void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     int j;
 
     for (int i = n - 1; i >= 0; i--) {
-        j = d_int_uniform(e_uniform_vector) * i / (n - 1);
+        j = d_int_uniform(e_uniform_vector) * i / 2047;
         swap(v[i], v[j]);
     }
 }
@@ -178,6 +180,62 @@ vector<int> inverse(vector<int> permutation) {
     }
     return inverted;
 }
+
+#ifndef SIMULATION
+VectorXf annealer(SparseMatrix<float> theta) {
+    PyObject *t = PyDict_New();
+    PyObject *key;
+    PyObject *val;
+    PyObject *name;
+    PyObject *module;
+    PyObject *func;
+    PyObject *value;
+    PyObject *sysPath;
+    VectorXf z(theta.outerSize());
+    /*char *file = "annealer.py";
+    wchar_t **changed_file;
+
+    changed_file = (wchar_t **)malloc((2) * sizeof *changed_file);
+    changed_file[0] = (wchar_t *)malloc(strlen(file) + 1);
+    mbstowcs(changed_file[0], file, strlen(file) + 1);
+    changed_file[1] = NULL;
+
+    PySys_SetArgv(2, changed_file);*/
+    Py_Initialize();
+    sysPath = PySys_GetObject("path");
+    PyList_Append(sysPath, PyUnicode_FromString("/home/thomas/Documents/git/QC-QUBO"));
+
+    for (int i = 0; i < theta.outerSize(); i++) {
+        for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
+            key = Py_BuildValue("(i, i)", it.row(), it.col());
+            val = Py_BuildValue("d", it.value());
+            PyDict_SetItem(t, key, val);
+        }
+    }
+
+    name = PyUnicode_FromString("solver");
+    module = PyImport_Import(name);
+    if (module) {
+        func = PyObject_GetAttrString(module, "run_annealer");
+        if (func && PyCallable_Check(func)) {
+            value = PyObject_CallObject(func, t);
+
+            for(int i = 0; i < theta.outerSize(); i++) {
+                val = PyList_GetItem(value, i);
+                z(i) = (float)PyFloat_AsDouble(val);
+            }
+        } else {
+            cerr << "[ERROR] Function" << endl;
+        }
+    } else {
+        cerr << "[ERROR] Module" << endl;
+    }
+    /*free(changed_file[0]);
+    free(changed_file[1]);
+    free(changed_file);*/
+    Py_Finalize();
+}
+#endif
 
 void h(VectorXf &z, double pr) {
     int n = z.size();

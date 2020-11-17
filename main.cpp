@@ -1,7 +1,7 @@
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 #include <vector>
-#include <chrono>
 
 #include "Eigen/Core"
 #include "Eigen/SparseCore"
@@ -12,45 +12,42 @@
 using namespace std;
 using namespace Eigen;
 
-#define n 16 // number of coefficients (has to be 8*x)
+#define n 16  // number of coefficients (has to be 8*x)
 
 VectorXf solve(MatrixXf);
 
-mt19937 e_uniform_g;
-mt19937 e_uniform_h;
-mt19937 e_uniform_shuffle;
-mt19937 e_uniform_ann;
-mt19937 e_uniform_pert;
-mt19937 e_uniform_vector;
-unsigned int seed_g;
-unsigned int seed_h;
-unsigned int seed_shuffle;
-unsigned int seed_ann;
-unsigned int seed_pert;
-unsigned int seed_vector;
+mt19937_64 e_uniform_g;
+mt19937_64 e_uniform_h;
+mt19937_64 e_uniform_shuffle;
+mt19937_64 e_uniform_ann;
+mt19937_64 e_uniform_pert;
+mt19937_64 e_uniform_vector;
+unsigned long long seed_g;
+unsigned long long seed_h;
+unsigned long long seed_shuffle;
+unsigned long long seed_ann;
+unsigned long long seed_pert;
+unsigned long long seed_vector;
 random_device rd;
 uniform_real_distribution<double> d_real_uniform(0.0, 1.0);
-uniform_int_distribution<int> d_int_uniform(0, n); // 2048 max number of nodes
+uniform_int_distribution<unsigned long long> d_int_uniform(0, 2048);  // 2048 max number of nodes
 
-int main()
-{
-    MatrixXf Q(n, n); // QUBO Problem Matrix
+int main() {
+    MatrixXf Q(n, n);  // QUBO Problem Matrix
 
 #ifndef DEBUG
     srand(time(0));
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = i; j < n; j++)
-        {
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
             if (j == i)
-                Q(i, j) = (float)i / 2; // i/2 on the diagonal (after will be added up by itself)
+                Q(i, j) = (float)i / 2;  // i/2 on the diagonal (after will be added up by itself)
             else
-                Q(i, j) = (float)((rand() % 201) - 100) / 10; // random value in [1, 10] on half the matrix
+                Q(i, j) = (float)((rand() % 201) - 100) / 10;  // random value in [1, 10] on half the matrix
         }
     }
     MatrixXf temp = Q;
     temp.transposeInPlace();
-    Q += temp; // Add itself but transposed -> symmetric matrix
+    Q += temp;  // Add itself but transposed -> symmetric matrix
 #else
     Q << 0, 0.2, 9.7, 9.5, -4.6, -8.2, 4.7, -3.4, -3.5, 6, 0.2, 6.3, 8.6, 8.7, 7.8, 3.9,
         0.2, 1, -0.1, -7.1, -5.5, 9.3, 6.8, -7.7, 6.7, -3, -3.5, -6.9, 9, 4.6, -6.2, -0.4,
@@ -77,62 +74,61 @@ int main()
     return 0;
 }
 
-VectorXf solve(MatrixXf Q)
-{
+VectorXf solve(MatrixXf Q) {
     //Init
 
-    if (n % 8 != 0 || n == 0)
-    {
+    if (n % 8 != 0 || n == 0) {
         cout << "[Warning] n must be multiple of 8" << endl;
         exit(1);
     }
 
-    SparseMatrix<float> A = init_A(n); //Chimera topology
+    SparseMatrix<float> A = init_A(n);  //Chimera topology
     init_seeds();
 
     //Input
-    double pmin = 0.1f;    // minimum probability 0 < pδ < 0.5 of permutation modification
-    double eta = 0.01f;    // probability decreasing rate η > 0
-    double q = 0.1f;       // candidate perturbation probability q > 0
-    double lambda0 = 1.0f; // initial balancing factor λ0 > 0
-    int k = 1;             // number of annealer runs k ≥ 1
-    int N = 10;            // Decreasing time
+    double pmin = 0.33f;     // minimum probability 0 < pδ < 0.5 of permutation modification
+    double eta = 0.01f;      // probability decreasing rate η > 0
+    double q = 0.1f;         // candidate perturbation probability q > 0
+    double lambda0 = 0.0f;  // initial balancing factor λ0 > 0
+    int k = 1;               // number of annealer runs k ≥ 1
+    int N = 20;              // Decreasing time
 
     //Termination Parameters
-    int imax = 2000; // Max number of iteration
-    int Nmax = 50;   // Max number of: solution equal to the best one + solution worse than the best one
-    int dmin = 30;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
+    int imax = 3000;  // Max number of iteration
+    int Nmax = 50;    // Max number of solution equal to the best one + solution worse than the best one
+    int dmin = 30;    // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
-    MatrixXf In(n, n); //Identity matrix
+    MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
 
+#ifdef SIMULATION
     cout << "Q" << endl
          << Q << endl
          << endl;
     cout << "A" << endl
          << A << endl
          << endl;
+#endif
 
     //Algorithm
     MatrixXf Q_first(n, n);
     SparseMatrix<float> theta1(n, n), theta2(n, n), theta_first(n, n);
     VectorXf z_star(n), z_first(n), z1(n), z2(n), z_gold(n);
     MatrixXf z_diag(n, n);
-    MatrixXf S(n, n); //Tabu Matrix
+    MatrixXf S(n, n);  //Tabu Matrix
     vector<int> perm(n), perm_star(n), perm1(n), perm2(n);
     double f1, f2, f_star, f_first, f_gold;
-    double p = 1;            // probability of an element to be considered for shuffling
-    int e = 0;               // Number of solutions that equal the best
-    int d = 0;               // Number of solutions that are sub optimal
-    double lambda = lambda0; // Tabu weight
-    bool perturbed;          // True when h perturbs the candidate
+    double p = 1;             // probability of an element to be considered for shuffling
+    int e = 0;                // Number of solutions that equal the best
+    int d = 0;                // Number of solutions that are sub optimal
+    double lambda = lambda0;  // Tabu weight
+    bool perturbed;           // True when h perturbs the candidate
     bool simul_ann;
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
 
     // Initialization of perm vectors like an identity matrix of order n
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         perm[i] = i;
         perm1[i] = i;
         perm2[i] = i;
@@ -143,29 +139,26 @@ VectorXf solve(MatrixXf Q)
     theta2 = g_strong(Q, A, perm2, perm2, p);
 
 #ifdef SIMULATION
-    double minimum = compute_Q(Q); // Global minimum of Q, only for simulation pourposes
+    double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
 
     z1 = map_back(min_energy(theta1), perm1);
     z2 = map_back(min_energy(theta2), perm2);
 #else
-    //Call annealer
+    annealer(theta1);
 #endif
 
     f1 = fQ(Q, z1);
     f2 = fQ(Q, z2);
 
-    if (f1 < f2)
-    {                // f1 is better
-        z_star = z1; // Best
+    if (f1 < f2) {    // f1 is better
+        z_star = z1;  // Best
         f_star = f1;
         perm_star = perm1;
-        z_first = z2; // Worst
+        z_first = z2;  // Worst
 
         z_gold = z1;
         f_gold = f1;
-    }
-    else
-    { // f2 is better
+    } else {  // f2 is better
         z_star = z2;
         f_star = f2;
         perm_star = perm2;
@@ -176,19 +169,15 @@ VectorXf solve(MatrixXf Q)
     }
 
     // f1 and f2 are floats -> float comparison
-    if (abs(f1 - f2) > __FLT_EPSILON__)
-    {                                  // if(f1 != f2)
-        z_diag = z_first.asDiagonal(); // Matrix where the diagonal is made by elemnt of z_first
+    if (abs(f1 - f2) > __FLT_EPSILON__) {  // if(f1 != f2)
+        z_diag = z_first.asDiagonal();     // Matrix where the diagonal is made by elemnt of z_first
         S = kroneckerProduct(z_first, z_first.transpose()) - In + z_diag;
-    }
-    else
-    {
+    } else {
         S = MatrixXf::Zero(n, n);
     }
 
     int i = 1;
-    do
-    {
+    do {
         start = chrono::steady_clock::now();
         perturbed = false;
         simul_ann = false;
@@ -196,7 +185,7 @@ VectorXf solve(MatrixXf Q)
         Q_first = Q + lambda * S;
 
         if (!(i % N))
-            p = p - (p - pmin) * eta; // 0 mod N va considerato come 0?
+            p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
         theta_first = g_strong(Q_first, A, perm, perm_star, p);
 #ifdef SIMULATION
@@ -204,30 +193,24 @@ VectorXf solve(MatrixXf Q)
 #else
         //Call annealer
 #endif
-        if (d_real_uniform(e_uniform_pert) <= q)
-        {
-            h(z_first, p); // possibly perturb the candidate
+        if (d_real_uniform(e_uniform_pert) <= q) {
+            h(z_first, p);  // possibly perturb the candidate
             perturbed = true;
         }
 
-        if (!comp_vectors(z_first, z_star))
-        {
+        if (!comp_vectors(z_first, z_star)) {
             f_first = fQ(Q, z_first);
-            if (f_first < f_star)
-            {                          // f_first is better
-                swap(z_first, z_star); // z_first is better
+            if (f_first < f_star) {     // f_first is better
+                swap(z_first, z_star);  // z_first is better
                 f_star = f_first;
                 perm_star = perm;
                 e = 0;
                 d = 0;
                 z_diag = z_first.asDiagonal();
                 S = S + kroneckerProduct(z_first, z_first.transpose()) - In + z_diag;
-            }
-            else
-            {
+            } else {
                 d++;
-                if (d_real_uniform(e_uniform_ann) <= simulated_annealing(f_first, f_star, p))
-                {
+                if (d_real_uniform(e_uniform_ann) <= simulated_annealing(f_first, f_star, p)) {
                     swap(z_first, z_star);
                     f_star = f_first;
                     perm_star = perm;
@@ -236,26 +219,24 @@ VectorXf solve(MatrixXf Q)
                 }
             }
 
-            if (f_first < f_gold)
-            {
+            if (f_first < f_gold) {
                 z_gold = z_first;
                 f_gold = f_first;
             }
 
             lambda = min(lambda0, i, e);
-        }
-        else
-        {
+        } else {
             e++;
         }
 
 #ifdef SIMULATION
         log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
-        end = chrono::steady_clock::now();
-        chrono::duration<double> diff = end - start;
-        cout << "\t" << diff.count() << "s" << endl
-             << endl;
 #endif
+        /*end = chrono::steady_clock::now();
+        chrono::duration<double> diff = end - start;
+        cout << endl
+             << diff.count() << "s" << endl
+             << endl;*/
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
