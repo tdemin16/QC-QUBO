@@ -52,12 +52,13 @@ def main():
     while True:
         x = sys.stdin.read(100)
         if(x[0] != "#"):
+            x = x.split('\x00',1)[0]
             if i == 0:
-                r = x
+                r = int(x)
             elif i == 1:
-                c = x
+                c = int(x)
             else:
-                Q[r, c] = x
+                Q[r, c] = float(x)
                 pass
 
             i = (i + 1) % 3

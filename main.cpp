@@ -108,7 +108,7 @@ VectorXf solve(MatrixXf Q) {
         char* args[] = {first, second, NULL};
 
         dup2(fd[READ], STDIN_FILENO);
-        dup2(fd[WRITE + 2], STDOUT_FILENO);
+        //dup2(fd[WRITE + 2], STDOUT_FILENO);
 
         close(fd[READ]);
         close(fd[WRITE]);
