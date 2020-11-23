@@ -105,7 +105,7 @@ SparseMatrix<float> gen_P(vector<int> perm);
 double compute_Q(MatrixXf Q);
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
 #else
-void log(VectorXf z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
+void log(double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
 #endif
 
 #endif  //LIB_H

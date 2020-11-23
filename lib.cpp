@@ -338,7 +338,7 @@ double compute_Q(MatrixXf Q) {
 
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
     cout << "---Current status at " << i << "th iteration---" << endl
-         << "Best so far: f*=" << f_star << "\tz*=" << z_star.transpose() << endl
+         << "f*=" << f_star << "\tz*=" << z_star.transpose() << endl
          << "To reach: min=" << min << "\tf_gold=" << f_gold << endl
          << "λ=" << lambda << "\tp=" << p << "\te=" << e << "\td=" << d;
     if (perturbed) cout << "\tperturbed";
@@ -347,8 +347,8 @@ void log(VectorXf z_star, double f_star, double min, double f_gold, double lambd
 #else
 void log(VectorXf z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
     cout << "---Current status at " << i << "th iteration---" << endl
-         << "Best so far: f*=" << f_star << "\tz*=" << z_star.transpose() << endl
-         << "f_gold=" << f_gold << endl
+         << "f*=" << f_star << endl
+         << "Best so far: f_gold=" << f_gold << endl
          << "λ=" << lambda << "\tp=" << p << "\te=" << e << "\td=" << d;
     if (perturbed) cout << "\tperturbed";
     if (simul_ann) cout << "\tsimulated annealing";
