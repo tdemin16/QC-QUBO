@@ -1,7 +1,5 @@
 import dimod
 import hybrid
-import time
-import numpy as np
 import os
 import sys
 
@@ -15,24 +13,9 @@ def dict_to_vector(dic):
     return vector
 
 
-def run_annealer(Q):
+def run_annealer(Q, iteration, workflow):
     # Build the QUBO problem
     bqm = dimod.BinaryQuadraticModel({}, Q, 0, dimod.SPIN)
-
-    start = time.time_ns()
-    # Define the workflow
-    iteration = hybrid.RacingBranches(
-        hybrid.InterruptableTabuSampler(),
-        hybrid.EnergyImpactDecomposer(size=1)
-        | hybrid.QPUSubproblemAutoEmbeddingSampler()
-        | hybrid.SplatComposer()
-    ) | hybrid.ArgMin()
-    end = time.time_ns() - start
-    f = open("out.txt", "a")
-    f.write(str(end))
-    f.close()
-
-    workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
     # Solve
     init_state = hybrid.State.from_problem(bqm)
@@ -46,6 +29,15 @@ def main():
     Q = dict()
     i = 0
     finish = False
+
+    iteration = hybrid.RacingBranches(
+        hybrid.InterruptableTabuSampler(),
+        hybrid.EnergyImpactDecomposer(size=1)
+        | hybrid.QPUSubproblemAutoEmbeddingSampler()
+        | hybrid.SplatComposer()
+    ) | hybrid.ArgMin()
+
+    workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
     while True:
         x = sys.stdin.read(100)
@@ -63,7 +55,7 @@ def main():
 
         else:
             i = 0
-            l = run_annealer(Q)
+            l = run_annealer(Q, iteration, workflow)
             for j in l:
                 if(j == 1):
                     msg = ("+" + str(j)).encode()
