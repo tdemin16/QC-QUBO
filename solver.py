@@ -58,11 +58,11 @@ def main():
             l = run_annealer(Q, iteration, workflow)
             
             for j in range(len(l)):
-                if(j == 1):
-                    msg = ("+" + str(j)).encode()
+                if(l[j] == 1):
+                    msg = ("+" + str(l[j])).encode()
                 else:
-                    j = 1
-                    msg = ("-" + str(j)).encode()
+                    l[j] = 1
+                    msg = ("-" + str(l[j])).encode()
                 os.write(1, msg) # write solution on pipe
                 pass
 
