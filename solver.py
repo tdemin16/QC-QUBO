@@ -22,7 +22,7 @@ def run_annealer(Q, iteration, workflow):
     final_state = workflow.run(init_state).result()
     solution = final_state.samples.first.sample
 
-    return dict_to_vector(solution)
+    return solution
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
 
     while True:
         x = sys.stdin.read(100)
-        if(x[0] != "#"):
+        if(x[0] != "#"): # retrieving problem from pipe
             x = x.split('\x00',1)[0]
             if i == 0:
                 r = int(x)
@@ -53,19 +53,20 @@ def main():
 
             i = (i + 1) % 3
 
-        else:
+        else: #compute problem
             i = 0
             l = run_annealer(Q, iteration, workflow)
-            for j in l:
+            
+            for j in range(len(l)):
                 if(j == 1):
                     msg = ("+" + str(j)).encode()
                 else:
                     j = 1
                     msg = ("-" + str(j)).encode()
-                os.write(1, msg)
+                os.write(1, msg) # write solution on pipe
                 pass
 
-            Q.clear()
+            Q.clear() # clear dictionary
             pass
 
         pass
