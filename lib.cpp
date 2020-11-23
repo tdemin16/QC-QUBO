@@ -345,7 +345,7 @@ void log(VectorXf z_star, double f_star, double min, double f_gold, double lambd
     if (simul_ann) cout << "\tsimulated annealing";
 }
 #else
-void log(VectorXf z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
+void log(double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
     cout << "---Current status at " << i << "th iteration---" << endl
          << "f*=" << f_star << endl
          << "Best so far: f_gold=" << f_gold << endl
