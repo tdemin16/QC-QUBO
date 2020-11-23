@@ -15,17 +15,11 @@ def dict_to_vector(dic):
     return vector
 
 
-def run_annealer(Q, ret_dict=False):
+def run_annealer(Q):
     # Build the QUBO problem
-    if isinstance(Q, dict):
-        bqm = dimod.BinaryQuadraticModel({}, Q, 0, dimod.SPIN)
-    elif isinstance(Q, np.ndarray):
-        new_Q = matrix_to_dict(Q)
-        bqm = dimod.BinaryQuadraticModel({}, new_Q, 0, dimod.SPIN)
-    else:
-        print("Q type incorrect")
-        raise TypeError
+    bqm = dimod.BinaryQuadraticModel({}, Q, 0, dimod.SPIN)
 
+    start = time.time_ns()
     # Define the workflow
     iteration = hybrid.RacingBranches(
         hybrid.InterruptableTabuSampler(),
@@ -33,6 +27,10 @@ def run_annealer(Q, ret_dict=False):
         | hybrid.QPUSubproblemAutoEmbeddingSampler()
         | hybrid.SplatComposer()
     ) | hybrid.ArgMin()
+    end = time.time_ns() - start
+    f = open("out.txt", "a")
+    f.write(str(end))
+    f.close()
 
     workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
