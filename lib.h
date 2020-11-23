@@ -4,14 +4,14 @@
 #include <math.h>
 #include <time.h>
 
+#include <chrono>
+#include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <map>
 #include <random>
-#include <chrono>
 #include <string>
-#ifndef SIMULATION
-#include <Python.h>
-#endif
+#include <unistd.h>
 
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
@@ -20,19 +20,15 @@
 using namespace std;
 using namespace Eigen;
 
+#define READ 0
+#define WRITE 1
+
 extern mt19937_64 e_uniform_g;
 extern mt19937_64 e_uniform_h;
 extern mt19937_64 e_uniform_shuffle;
 extern mt19937_64 e_uniform_ann;
 extern mt19937_64 e_uniform_pert;
 extern mt19937_64 e_uniform_vector;
-extern unsigned long long seed_g;
-extern unsigned long long seed_h;
-extern unsigned long long seed_shuffle;
-extern unsigned long long seed_ann;
-extern unsigned long long seed_pert;
-extern unsigned long long seed_vector;
-extern random_device rd;
 extern uniform_real_distribution<double> d_real_uniform;
 extern uniform_int_distribution<unsigned long long> d_int_uniform;
 
@@ -72,7 +68,7 @@ vector<int> fill(map<int, int> m, vector<int> permutation);
 vector<int> inverse(vector<int> permutation);
 
 #ifndef SIMULATION
-VectorXf annealer(SparseMatrix<float> theta);
+VectorXf send_to_annealer(SparseMatrix<float> theta, int *fd);
 #endif
 
 // Input: Vector of n integers z, probability pr
@@ -110,4 +106,4 @@ double compute_Q(MatrixXf Q);
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
 #endif
 
-#endif //LIB_H
+#endif  //LIB_H

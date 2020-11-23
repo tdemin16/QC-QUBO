@@ -1,21 +1,13 @@
 #include "lib.h"
 
 void init_seeds() {
-    //#ifndef DEBUG
-    seed_g = rd() ^ rd();
-    seed_h = rd() ^ rd();
-    seed_ann = rd() ^ rd();
-    seed_pert = rd() ^ rd();
-    seed_shuffle = rd() ^ rd();
-    seed_vector = rd() ^ rd();
-    /*#else
-    seed_g = 100000;
-    seed_h = 200000;
-    seed_ann = 300000;
-    seed_pert = 400000;
-    seed_shuffle = 500000;
-    seed_vector = 600000;
-#endif*/
+    random_device rd;
+    seed_seq seed_g{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    seed_seq seed_h{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    seed_seq seed_shuffle{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    seed_seq seed_ann{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    seed_seq seed_pert{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    seed_seq seed_vector{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
 
     e_uniform_g.seed(seed_g);
     e_uniform_h.seed(seed_h);
@@ -182,58 +174,37 @@ vector<int> inverse(vector<int> permutation) {
 }
 
 #ifndef SIMULATION
-VectorXf annealer(SparseMatrix<float> theta) {
-    PyObject *t = PyDict_New();
-    PyObject *key;
-    PyObject *val;
-    PyObject *name;
-    PyObject *module;
-    PyObject *func;
-    PyObject *value;
-    PyObject *sysPath;
-    VectorXf z(theta.outerSize());
-    /*char *file = "annealer.py";
-    wchar_t **changed_file;
+VectorXf send_to_annealer(SparseMatrix<float> theta, int *fd) {
+    int n = theta.outerSize();
+    char r[100];
+    char c[100];
+    char val[100];
+    char ret[3];
+    VectorXf z(n);
 
-    changed_file = (wchar_t **)malloc((2) * sizeof *changed_file);
-    changed_file[0] = (wchar_t *)malloc(strlen(file) + 1);
-    mbstowcs(changed_file[0], file, strlen(file) + 1);
-    changed_file[1] = NULL;
-
-    PySys_SetArgv(2, changed_file);*/
-    Py_Initialize();
-    sysPath = PySys_GetObject("path");
-    PyList_Append(sysPath, PyUnicode_FromString("/home/thomas/Documents/git/QC-QUBO"));
+    memset(r, '\0', sizeof(char) * 100);
+    memset(c, '\0', sizeof(char) * 100);
+    memset(val, '\0', sizeof(char) * 100);  // to be adjusted, could be too small
 
     for (int i = 0; i < theta.outerSize(); i++) {
         for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
-            key = Py_BuildValue("(i, i)", it.row(), it.col());
-            val = Py_BuildValue("d", it.value());
-            PyDict_SetItem(t, key, val);
+            sprintf(r, "%ld", it.row());
+            sprintf(c, "%ld", it.col());
+            sprintf(val, "%lf", it.value());
+
+            write(fd[WRITE], r, 100);  // 100 is very generous
+            write(fd[WRITE], c, 100);
+            write(fd[WRITE], val, 100);
         }
     }
+    sprintf(val, "%s", "#\0");
+    write(fd[WRITE], val, 100);
 
-    name = PyUnicode_FromString("solver");
-    module = PyImport_Import(name);
-    if (module) {
-        func = PyObject_GetAttrString(module, "run_annealer");
-        if (func && PyCallable_Check(func)) {
-            value = PyObject_CallObject(func, t);
-
-            for(int i = 0; i < theta.outerSize(); i++) {
-                val = PyList_GetItem(value, i);
-                z(i) = (float)PyFloat_AsDouble(val);
-            }
-        } else {
-            cerr << "[ERROR] Function" << endl;
-        }
-    } else {
-        cerr << "[ERROR] Module" << endl;
+    for (int i = 0; i < n; i++) {
+        read(fd[READ + 2], ret, 2);
+        z(i) = atof(ret);
     }
-    /*free(changed_file[0]);
-    free(changed_file[1]);
-    free(changed_file);*/
-    Py_Finalize();
+    return z;
 }
 #endif
 

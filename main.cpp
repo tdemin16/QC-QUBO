@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <sys/signal.h>
+
 #include <chrono>
 #include <cstdio>
 #include <iostream>
@@ -22,13 +25,6 @@ mt19937_64 e_uniform_shuffle;
 mt19937_64 e_uniform_ann;
 mt19937_64 e_uniform_pert;
 mt19937_64 e_uniform_vector;
-unsigned long long seed_g;
-unsigned long long seed_h;
-unsigned long long seed_shuffle;
-unsigned long long seed_ann;
-unsigned long long seed_pert;
-unsigned long long seed_vector;
-random_device rd;
 uniform_real_distribution<double> d_real_uniform(0.0, 1.0);
 uniform_int_distribution<unsigned long long> d_int_uniform(0, 2048);  // 2048 max number of nodes
 
@@ -82,16 +78,63 @@ VectorXf solve(MatrixXf Q) {
         exit(1);
     }
 
+#ifndef SIMULATION
+    int fd[4];
+    pid_t child_pid;
+
+    /*---------------------------
+        fd[READ] child read
+        fd[WRITE] father write
+        fd[READ + 2] father read
+        fd[WRTIE + 2] child write
+    ---------------------------*/
+
+    if (pipe(fd) != 0) {
+        cout << "[PIPE1 ERROR - CLOSING]" << endl;
+    }
+    if (pipe(fd + 2) != 0) {
+        cout << "[PIPE2 ERROR - CLOSING]" << endl;
+    }
+
+    child_pid = fork();
+
+    if (child_pid == 0) {
+        char first[8];
+        char second[12];
+        memset(first, '\0', sizeof(char) * 8);
+        memset(second, '\0', sizeof(char) * 12);
+        sprintf(first, "python3");
+        sprintf(second, "./solver.py");
+        char* args[] = {first, second, NULL};
+
+        dup2(fd[READ], STDIN_FILENO);
+        dup2(fd[WRITE + 2], STDOUT_FILENO);
+
+        close(fd[READ]);
+        close(fd[WRITE]);
+        close(fd[READ + 2]);
+        close(fd[WRITE + 2]);
+
+        if (execvp(args[0], args) == -1) {
+            cout << "[EXECVP ERROR - CLOSING]" << endl;
+            exit(3);
+        }
+    } else if (child_pid == -1) {
+        cout << "[FORK ERROR - CLOSING]" << endl;
+        exit(4);
+    }
+#endif
+
     SparseMatrix<float> A = init_A(n);  //Chimera topology
     init_seeds();
 
     //Input
-    double pmin = 0.33f;     // minimum probability 0 < pδ < 0.5 of permutation modification
-    double eta = 0.01f;      // probability decreasing rate η > 0
-    double q = 0.1f;         // candidate perturbation probability q > 0
-    double lambda0 = 0.0f;  // initial balancing factor λ0 > 0
-    int k = 1;               // number of annealer runs k ≥ 1
-    int N = 20;              // Decreasing time
+    double pmin = 0.2f;     // minimum probability 0 < pδ < 0.5 of permutation modification
+    double eta = 0.01f;     // probability decreasing rate η > 0
+    double q = 0.1f;        // candidate perturbation probability q > 0
+    double lambda0 = 1.0f;  // initial balancing factor λ0 > 0
+    int k = 1;              // number of annealer runs k ≥ 1
+    int N = 20;             // Decreasing time
 
     //Termination Parameters
     int imax = 3000;  // Max number of iteration
@@ -144,7 +187,8 @@ VectorXf solve(MatrixXf Q) {
     z1 = map_back(min_energy(theta1), perm1);
     z2 = map_back(min_energy(theta2), perm2);
 #else
-    annealer(theta1);
+    z1 = map_back(send_to_annealer(theta1, fd), perm1);
+    z2 = map_back(send_to_annealer(theta2, fd), perm2);
 #endif
 
     f1 = fQ(Q, z1);
@@ -191,7 +235,7 @@ VectorXf solve(MatrixXf Q) {
 #ifdef SIMULATION
         z_first = map_back(min_energy(theta_first), perm);
 #else
-        //Call annealer
+        z_first = map_back(send_to_annealer(theta_first, fd), perm);
 #endif
         if (d_real_uniform(e_uniform_pert) <= q) {
             h(z_first, p);  // possibly perturb the candidate
@@ -219,6 +263,7 @@ VectorXf solve(MatrixXf Q) {
                 }
             }
 
+            // Best solutions yet
             if (f_first < f_gold) {
                 z_gold = z_first;
                 f_gold = f_first;
@@ -239,6 +284,14 @@ VectorXf solve(MatrixXf Q) {
              << endl;*/
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
+
+#ifndef SIMULATION
+    close(fd[READ]);
+    close(fd[WRITE]);
+    close(fd[READ + 2]);
+    close(fd[WRITE + 2]);
+    kill(child_pid, SIGKILL);
+#endif
 
     printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
     printf("k:%d\n", k);
