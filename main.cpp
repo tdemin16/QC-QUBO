@@ -108,7 +108,7 @@ VectorXf solve(MatrixXf Q) {
         char* args[] = {first, second, NULL};
 
         dup2(fd[READ], STDIN_FILENO);
-        //dup2(fd[WRITE + 2], STDOUT_FILENO);
+        dup2(fd[WRITE + 2], STDOUT_FILENO);
 
         close(fd[READ]);
         close(fd[WRITE]);
@@ -276,12 +276,14 @@ VectorXf solve(MatrixXf Q) {
 
 #ifdef SIMULATION
         log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
+#else
+
 #endif
-        /*end = chrono::steady_clock::now();
+        end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
         cout << endl
              << diff.count() << "s" << endl
-             << endl;*/
+             << endl;
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
