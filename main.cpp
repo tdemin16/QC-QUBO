@@ -277,7 +277,7 @@ VectorXf solve(MatrixXf Q) {
 #ifdef SIMULATION
         log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
 #else
-
+        log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
 #endif
         end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
