@@ -1,5 +1,28 @@
 #include "lib.h"
 
+void init_child(int *fd) {
+    char first[8];
+    char second[12];
+    memset(first, '\0', sizeof(char) * 8);
+    memset(second, '\0', sizeof(char) * 12);
+    sprintf(first, "python3");
+    sprintf(second, "./solver.py");
+    char *args[] = {first, second, NULL};
+
+    dup2(fd[READ], STDIN_FILENO);
+    dup2(fd[WRITE + 2], STDOUT_FILENO);
+
+    close(fd[READ]);
+    close(fd[WRITE]);
+    close(fd[READ + 2]);
+    close(fd[WRITE + 2]);
+
+    if (execvp(args[0], args) == -1) {
+        cout << "[EXECVP ERROR - CLOSING]" << endl;
+        exit(3);
+    }
+}
+
 void init_seeds() {
     random_device rd;
     seed_seq seed_g{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
@@ -17,32 +40,45 @@ void init_seeds() {
     e_uniform_vector.seed(seed_vector);
 }
 
-SparseMatrix<float> init_A(int n) {
-    SparseMatrix<float> A(n, n);  //Chimera Topology
+SparseMatrix<float> init_A(int n, int *fd) {
+#ifdef SIMULATION
+    int sim = 1;
+#else
+    int sim = 0;
+#endif
+    char n_nodes[6];
+    char simulation[2];
+    char i[5];
+    char j[5];
+    int r;
+    int c;
+    bool end = false;
+    SparseMatrix<float> A(n, n);
     vector<Triplet<float>> t;
-    t.reserve(11 * n);             // |E| ~ 5n * 2 entries per edge + |V| = n => 10*n + n = 11n
-    int block;                     // Current block (a block is made by the 8 nodes that form a bipartite subgraph)
-    int row;                       // Current row of blocks
-    for (int i = 0; i < n; i++) {  //For each node
-        block = i / 8;
-        row = i / (8 * 16);
-        t.push_back(Triplet<float>(i, i, 1));  // Insert 1 on the diagonal
-        if (i % 8 < 4) {                       // if i is in the "left" side of its subgraph
-            for (int j = 4; j < 8; j++) {      // Insert a forward edge
-                if (block * 8 + j < n) t.push_back(Triplet<float>(i, block * 8 + j, 1));
-            }
-            if (i + 8 * 16 < n) t.push_back(Triplet<float>(i, i + 8 * 16, 1));   // if i's corresponding in the following row exists (n is large enough) put a forward edge
-            if (i - 8 * 16 >= 0) t.push_back(Triplet<float>(i, i - 8 * 16, 1));  // i i's corresponding in the previous row exists put a backward edge
-        } else {                                                                 // otherwise, if i is in the "right" side of its subgraph
-            for (int j = 0; j < 4; j++) {                                        // Insert a backward edge
-                if (block * 8 + j < n) t.push_back(Triplet<float>(i, (block)*8 + j, 1));
-            }
-            if (row == (i + 8) / (8 * 16) && i + 8 < n) t.push_back(Triplet<float>(i, i + 8, 1));   // if i and its corresponding i+8 are in the same row, put a forward edge
-            if (row == (i - 8) / (8 * 16) && i - 8 >= 0) t.push_back(Triplet<float>(i, i - 8, 1));  // if i and its corresponding i-8 are in the same row, put a backward edge
-        }
-    }
-    A.setFromTriplets(t.begin(), t.end());
 
+    memset(n_nodes, '\0', sizeof(char) * 6);
+    memset(simulation, '\0', sizeof(char) * 2);
+    memset(i, '\0', 5);
+    memset(j, '\0', 5);
+
+    sprintf(n_nodes, "%d", n);
+    sprintf(simulation, "%d", sim);
+
+    write(fd[WRITE], n_nodes, 6);
+    write(fd[WRITE], simulation, 2);
+
+    do {
+        read(fd[READ + 2], i, 4);
+        read(fd[READ + 2], j, 4);
+        if (strncmp(i, "####", 4) != 0 && strncmp(j, "####", 4) != 0) {
+            r = atoi(i);
+            c = atoi(j);
+            t.push_back(Triplet<float>(r, c, 1.0f));
+        } else
+            end = true;
+    } while (!end);
+
+    A.setFromTriplets(t.begin(), t.end());
     return A;
 }
 

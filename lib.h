@@ -3,15 +3,15 @@
 
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <chrono>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <map>
 #include <random>
 #include <string>
-#include <unistd.h>
 
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
@@ -32,12 +32,14 @@ extern mt19937_64 e_uniform_vector;
 extern uniform_real_distribution<double> d_real_uniform;
 extern uniform_int_distribution<unsigned long long> d_int_uniform;
 
+void init_child(int *fd);
+
 // init seed in order to generate random numbers
 void init_seeds();
 
 // Input: number of nodes
 // Return: a SparseMatrix A containing CHimera's topology
-SparseMatrix<float> init_A(int n);
+SparseMatrix<float> init_A(int n, int *fd);
 
 // Input: Matrix of order n Q, Vector of n integers z
 // Return: z^T * Q * z

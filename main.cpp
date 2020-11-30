@@ -78,7 +78,6 @@ VectorXf solve(MatrixXf Q) {
         exit(1);
     }
 
-#ifndef SIMULATION
     int fd[4];
     pid_t child_pid;
 
@@ -99,34 +98,15 @@ VectorXf solve(MatrixXf Q) {
     child_pid = fork();
 
     if (child_pid == 0) {
-        char first[8];
-        char second[12];
-        memset(first, '\0', sizeof(char) * 8);
-        memset(second, '\0', sizeof(char) * 12);
-        sprintf(first, "python3");
-        sprintf(second, "./solver.py");
-        char* args[] = {first, second, NULL};
+        init_child(fd);
 
-        dup2(fd[READ], STDIN_FILENO);
-        dup2(fd[WRITE + 2], STDOUT_FILENO);
-
-        close(fd[READ]);
-        close(fd[WRITE]);
-        close(fd[READ + 2]);
-        close(fd[WRITE + 2]);
-
-        if (execvp(args[0], args) == -1) {
-            cout << "[EXECVP ERROR - CLOSING]" << endl;
-            exit(3);
-        }
     } else if (child_pid == -1) {
         cout << "[FORK ERROR - CLOSING]" << endl;
         exit(4);
     }
-#endif
 
-    SparseMatrix<float> A = init_A(n);  //Chimera topology
     init_seeds();
+    SparseMatrix<float> A = init_A(n, fd);  //Chimera topology
 
     //Input
     double pmin = 0.2f;     // minimum probability 0 < pδ < 0.5 of permutation modification
