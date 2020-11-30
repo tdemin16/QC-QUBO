@@ -52,7 +52,7 @@ def main():
     if(simulation == 0):
         theta = dict()
         i = 0
-        
+
         iteration = hybrid.RacingBranches(
             hybrid.InterruptableTabuSampler(),
             hybrid.EnergyImpactDecomposer(size=1)
@@ -82,12 +82,11 @@ def main():
                 i = 0
                 l = run_annealer(theta, iteration, workflow)
                 theta.clear()
-                #l = [-1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1]
                 msg = ""
                 size = 0
-                for ch in l:
-                    msg = msg + str(ch) + ","
-                    size += len(str(ch)) + 1
+                for j in range(len(l)):
+                    msg = msg + str(l[j]) + ","
+                    size += len(str(l[j])) + 1
 
                     if(size > 4000):
                         msg = (msg + ('\0' * (4096 - size))).encode()
