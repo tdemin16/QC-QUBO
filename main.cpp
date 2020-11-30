@@ -249,7 +249,7 @@ VectorXf solve(MatrixXf Q) {
                 f_gold = f_first;
             }
 
-            lambda = min(lambda0, i, e);
+            lambda = min(lambda0, i - 1, e);
         } else {
             e++;
         }

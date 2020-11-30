@@ -26,9 +26,12 @@ def main():
     simulation = int(simulation.split('\x00', 1)[0])
 
     row = 16 * 8
-    if(n >= row): n_cols = row
+    if(n >= row): n_cols = 16
     else: n_cols = n / 8
-    n_rows = (n // row) + 1
+    n_rows = int(n / row)
+    if n % row != 0:
+        n_rows += 1
+    sys.stderr.write("\n"+str(n)+ " " +str(n_cols) + " " + str(n_rows)+"\n")
 
     chimera_topology = dnx.chimera_graph(n_rows, n_cols)
     A = nx.adjacency_matrix(chimera_topology)
