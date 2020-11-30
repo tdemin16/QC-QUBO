@@ -2,6 +2,7 @@
 #define LIB_H
 
 #include <math.h>
+#include <sys/signal.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -31,6 +32,9 @@ extern mt19937_64 e_uniform_pert;
 extern mt19937_64 e_uniform_vector;
 extern uniform_real_distribution<double> d_real_uniform;
 extern uniform_int_distribution<unsigned long long> d_int_uniform;
+extern pid_t child_pid;
+
+void handle_sigint(int sig);
 
 void init_child(int *fd);
 

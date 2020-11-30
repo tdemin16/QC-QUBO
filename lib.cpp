@@ -1,5 +1,9 @@
 #include "lib.h"
 
+void handle_sigint(int sig) {
+    kill(child_pid, 9);
+}
+
 void init_child(int *fd) {
     char first[8];
     char second[12];

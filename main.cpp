@@ -27,6 +27,7 @@ mt19937_64 e_uniform_pert;
 mt19937_64 e_uniform_vector;
 uniform_real_distribution<double> d_real_uniform(0.0, 1.0);
 uniform_int_distribution<unsigned long long> d_int_uniform(0, 2048);  // 2048 max number of nodes
+pid_t child_pid;
 
 int main() {
     MatrixXf Q(n, n);  // QUBO Problem Matrix
@@ -79,7 +80,6 @@ VectorXf solve(MatrixXf Q) {
     }
 
     int fd[4];
-    pid_t child_pid;
 
     /*---------------------------
         fd[READ] child read
