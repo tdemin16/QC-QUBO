@@ -214,7 +214,7 @@ VectorXf solve(MatrixXf Q) {
 #ifdef SIMULATION
         z_first = map_back(min_energy(theta_first), perm);
 #else
-        z_first = map_back(send_to_annealer(theta_first, fd), perm);
+        z_first = map_back(send_to_annealer(theta_first), perm);
 #endif
         if (d_real_uniform(e_uniform_pert) <= q) {
             h(z_first, p);  // possibly perturb the candidate

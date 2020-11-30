@@ -62,9 +62,10 @@ def main():
 
         workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
-        while True:
+        end = False
+        while end == False:
             x = sys.stdin.read(100)
-            if(x[0] != "#"):  # retrieving problem from pipe
+            if(x[0] != "#" and x[0:3] != "END"):  # retrieving problem from pipe
                 x = x.split('\x00', 1)[0]
                 if i == 0:
                     r = int(x)
@@ -76,7 +77,7 @@ def main():
 
                 i = (i + 1) % 3
 
-            else:  # compute problem
+            elif(x[0] == "#"):  # compute problem
                 i = 0
                 l = run_annealer(theta, iteration, workflow)
 
@@ -91,7 +92,10 @@ def main():
 
                 theta.clear()  # clear dictionary
                 pass
-
+            
+            else:
+                end = True
+                pass
             pass
 
 
