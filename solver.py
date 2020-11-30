@@ -72,16 +72,16 @@ def main():
                     if(i == 0):
                         r = int(k)
                     elif(i == 1):
-                        c == int(k)
-                    else: theta[r, c] = float(k)
+                        c = int(k)
+                    else: 
+                        theta[r, c] = float(k)
 
                     i = (i + 1) % 3
-                pass
                 
             elif(x[0] == "#"):
                 i = 0
                 l = run_annealer(theta, iteration, workflow)
-                #l = {-1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1}
+                #l = {0:-1, 1:1, 2:-1, 3:1, 4:1, 5:-1, 6:1, 7:-1, 8:1, 9:1, 10:-1, 11:1, 12:-1, 13:1, 14:1, 15:-1}
                 theta.clear()
                 msg = ""
                 size = 0

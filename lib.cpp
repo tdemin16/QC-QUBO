@@ -250,6 +250,7 @@ VectorXf send_to_annealer(SparseMatrix<float> theta) {
             if (curr_size > 3500) {
                 for (int j = curr_size - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
                 write(fd[WRITE], msg, STR_MAX_LEN);
+                cout << msg << endl;
                 curr_size = 0;
                 strcpy(msg, "");
             }
@@ -258,6 +259,7 @@ VectorXf send_to_annealer(SparseMatrix<float> theta) {
     if (curr_size > 0) {
         for (int j = curr_size - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
         write(fd[WRITE], msg, STR_MAX_LEN);
+        cout << msg << endl;
         curr_size = 0;
     }
     sprintf(val, "%s", "#\0");
