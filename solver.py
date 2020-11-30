@@ -81,10 +81,11 @@ def main():
             elif(x[0] == "#"):
                 i = 0
                 l = run_annealer(theta, iteration, workflow)
+                #l = {-1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1}
                 theta.clear()
                 msg = ""
                 size = 0
-                for j in range(len(l)):
+                for j in l:
                     msg = msg + str(l[j]) + ","
                     size += len(str(l[j])) + 1
 
