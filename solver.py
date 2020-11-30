@@ -31,7 +31,6 @@ def main():
     n_rows = int(n / row)
     if n % row != 0:
         n_rows += 1
-    sys.stderr.write("\n"+str(n)+ " " +str(n_cols) + " " + str(n_rows)+"\n")
 
     chimera_topology = dnx.chimera_graph(n_rows, n_cols)
     A = nx.adjacency_matrix(chimera_topology)
@@ -53,6 +52,7 @@ def main():
     if(simulation == 0):
         theta = dict()
         i = 0
+        
         iteration = hybrid.RacingBranches(
             hybrid.InterruptableTabuSampler(),
             hybrid.EnergyImpactDecomposer(size=1)
@@ -64,38 +64,44 @@ def main():
 
         end = False
         while end == False:
-            x = sys.stdin.read(100)
-            if(x[0] != "#" and x[0:3] != "END"):  # retrieving problem from pipe
-                x = x.split('\x00', 1)[0]
-                if i == 0:
-                    r = int(x)
-                elif i == 1:
-                    c = int(x)
-                else:
-                    theta[r, c] = float(x)
-                    pass
+            x = sys.stdin.read(4096)
+            if(x[0] != "#"):  # retrieving problem from pipe
+                x = x.split(',')
+                for k in x:
+                    k = k.split('\x00', 1)[0]
+                    if(i == 0):
+                        r = int(k)
+                    elif(i == 1):
+                        c == int(k)
+                    else: theta[r, c] = float(k)
 
-                i = (i + 1) % 3
-
-            elif(x[0] == "#"):  # compute problem
+                    i = (i + 1) % 3
+                pass
+                
+            elif(x[0] == "#"):
                 i = 0
                 l = run_annealer(theta, iteration, workflow)
+                theta.clear()
+                #l = [-1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1]
+                msg = ""
+                size = 0
+                for ch in l:
+                    msg = msg + str(ch) + ","
+                    size += len(str(ch)) + 1
 
-                for j in range(len(l)):
-                    if(l[j] == 1):
-                        msg = ("+" + str(l[j])).encode()
-                    else:
-                        l[j] = 1
-                        msg = ("-" + str(l[j])).encode()
-                    os.write(1, msg)  # write solution on pipe
+                    if(size > 4000):
+                        msg = (msg + ('\0' * (4096 - size))).encode()
+                        os.write(1, msg)
+                        msg = ""
+                        size = 0
+                        pass
                     pass
 
-                theta.clear()  # clear dictionary
-                pass
-            
+                msg = (msg + ('\0' * (4096 - size))).encode()
+                os.write(1, msg)
+                pass 
             else:
-                end = True
-                pass
+                end = True   
             pass
 
 

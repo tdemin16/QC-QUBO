@@ -3,9 +3,9 @@
 
 #include <math.h>
 #include <sys/signal.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 #include <chrono>
 #include <cstdio>
@@ -24,6 +24,7 @@ using namespace Eigen;
 
 #define READ 0
 #define WRITE 1
+#define STR_MAX_LEN 4096
 
 extern mt19937_64 e_uniform_g;
 extern mt19937_64 e_uniform_h;
@@ -73,6 +74,7 @@ vector<int> inverse(vector<int> permutation);
 
 #ifndef SIMULATION
 VectorXf send_to_annealer(SparseMatrix<float> theta);
+void csv_to_vector(VectorXf &z, char *msg, int &count);
 #endif
 
 // Input: Vector of n integers z, probability pr

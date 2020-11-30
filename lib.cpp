@@ -191,7 +191,7 @@ vector<int> inverse(vector<int> permutation) {
 
 #ifndef SIMULATION
 VectorXf send_to_annealer(SparseMatrix<float> theta) {
-    int n = theta.outerSize();
+    /*int n = theta.outerSize();
     char r[100];
     char c[100];
     char val[100];
@@ -214,13 +214,71 @@ VectorXf send_to_annealer(SparseMatrix<float> theta) {
         }
     }
     sprintf(val, "%s", "#\0");
-    write(fd[WRITE], val, 100);
+    write(fd[WRITE], val, 100);*/
+
+    int n = theta.outerSize();
+    int curr_size = 0;
+    char msg[STR_MAX_LEN];
+    char val[STR_MAX_LEN];
+    char tmp[100];
+    int tmp_size = 0;
+    VectorXf z(n);
+
+    memset(val, '\0', sizeof(char) * STR_MAX_LEN);
+    memset(tmp, '\0', 100);
 
     for (int i = 0; i < n; i++) {
-        read(fd[READ + 2], ret, 2);
-        z(i) = atof(ret);
+        for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
+            sprintf(tmp, "%ld", it.row());
+            tmp_size = strlen(tmp);
+            strncat(msg, tmp, tmp_size);
+            strncat(msg, ",", 1);
+            curr_size += tmp_size + 1;
+
+            sprintf(tmp, "%ld", it.col());
+            tmp_size = strlen(tmp);
+            strncat(msg, tmp, tmp_size);
+            strncat(msg, ",", 1);
+            curr_size += tmp_size + 1;
+
+            sprintf(tmp, "%lf", it.value());
+            tmp_size = strlen(tmp);
+            strncat(msg, tmp, tmp_size);
+            strncat(msg, ",", 1);
+            curr_size += tmp_size + 1;
+
+            if (curr_size > 3500) {
+                for (int j = curr_size - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
+                write(fd[WRITE], msg, STR_MAX_LEN);
+                curr_size = 0;
+                strcpy(msg, "");
+            }
+        }
     }
+    if (curr_size > 0) {
+        for (int j = curr_size - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
+        write(fd[WRITE], msg, STR_MAX_LEN);
+        curr_size = 0;
+    }
+    sprintf(val, "%s", "#\0");
+    write(fd[WRITE], val, STR_MAX_LEN);
+
+    curr_size = 0;
+    while (curr_size < n) {
+        read(fd[READ + 2], msg, STR_MAX_LEN);
+        csv_to_vector(z, msg, curr_size);
+    }
+
     return z;
+}
+
+void csv_to_vector(VectorXf &z, char *msg, int &count) {
+    char *token = strtok(msg, ",");
+    while (token != NULL) {
+        z[count] = atoi(token);
+        count++;
+        token = strtok(NULL, ",");
+    }
 }
 #endif
 
