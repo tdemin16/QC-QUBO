@@ -28,6 +28,7 @@ mt19937_64 e_uniform_vector;
 uniform_real_distribution<double> d_real_uniform(0.0, 1.0);
 uniform_int_distribution<unsigned long long> d_int_uniform(0, 2048);  // 2048 max number of nodes
 pid_t child_pid;
+int fd[4];
 
 int main() {
     MatrixXf Q(n, n);  // QUBO Problem Matrix
@@ -79,8 +80,6 @@ VectorXf solve(MatrixXf Q) {
         exit(1);
     }
 
-    int fd[4];
-
     /*---------------------------
         fd[READ] child read
         fd[WRITE] father write
@@ -98,7 +97,7 @@ VectorXf solve(MatrixXf Q) {
     child_pid = fork();
 
     if (child_pid == 0) {
-        init_child(fd);
+        init_child();
 
     } else if (child_pid == -1) {
         cout << "[FORK ERROR - CLOSING]" << endl;
@@ -106,7 +105,7 @@ VectorXf solve(MatrixXf Q) {
     }
 
     init_seeds();
-    SparseMatrix<float> A = init_A(n, fd);  //Chimera topology
+    SparseMatrix<float> A = init_A(n);  //Chimera topology
 
     //Input
     double pmin = 0.2f;     // minimum probability 0 < pδ < 0.5 of permutation modification
@@ -167,8 +166,8 @@ VectorXf solve(MatrixXf Q) {
     z1 = map_back(min_energy(theta1), perm1);
     z2 = map_back(min_energy(theta2), perm2);
 #else
-    z1 = map_back(send_to_annealer(theta1, fd), perm1);
-    z2 = map_back(send_to_annealer(theta2, fd), perm2);
+    z1 = map_back(send_to_annealer(theta1), perm1);
+    z2 = map_back(send_to_annealer(theta2), perm2);
 #endif
 
     f1 = fQ(Q, z1);
@@ -267,11 +266,12 @@ VectorXf solve(MatrixXf Q) {
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
-#ifndef SIMULATION
     close(fd[READ]);
     close(fd[WRITE]);
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
+
+#ifndef SIMULATION
     kill(child_pid, SIGKILL);
 #endif
 

@@ -1,10 +1,15 @@
 #include "lib.h"
 
 void handle_sigint(int sig) {
-    kill(child_pid, 9);
+    char send[100];
+    memset(send, '\0', 100);
+    sprintf(send, "%s", "END");
+
+    write(fd[WRITE], send, 100);
+    wait(NULL);
 }
 
-void init_child(int *fd) {
+void init_child() {
     char first[8];
     char second[12];
     memset(first, '\0', sizeof(char) * 8);
@@ -44,7 +49,7 @@ void init_seeds() {
     e_uniform_vector.seed(seed_vector);
 }
 
-SparseMatrix<float> init_A(int n, int *fd) {
+SparseMatrix<float> init_A(int n) {
 #ifdef SIMULATION
     int sim = 1;
 #else
@@ -88,35 +93,6 @@ SparseMatrix<float> init_A(int n, int *fd) {
 
 float fQ(MatrixXf Q, VectorXf x) {
     return x.transpose() * Q * x;
-}
-
-MatrixXf g(MatrixXf P, float pr) {
-    int n = P.outerSize();
-    map<int, int> m;
-    MatrixXf P_first(n, n);
-
-    // with probability pr inserts i in the map with key i
-    for (int i = 0; i < n; i++) {
-        if (d_real_uniform(e_uniform_g) <= pr) {  // checks if the extracted numeber is equal or less than pr
-            m.insert(pair<int, int>(i, i));       //if it is, inserts the number
-        }
-    }
-
-    // shuffle keys
-    shuffle_map(m);
-
-    auto end = m.end();  // Used do determine whether the function find fails
-    for (int i = 0; i < n; i++) {
-        auto search = m.find(i);
-        if (search != end) {  //if the element is found
-            P_first.row(i) = P.row(m.at(i));
-        } else {
-            P_first.row(i) = P.row(i);
-        }
-    }
-
-    //P_first is a permutation of P
-    return P_first;
 }
 
 SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> &permutation, vector<int> old_permutation, double pr) {
@@ -214,7 +190,7 @@ vector<int> inverse(vector<int> permutation) {
 }
 
 #ifndef SIMULATION
-VectorXf send_to_annealer(SparseMatrix<float> theta, int *fd) {
+VectorXf send_to_annealer(SparseMatrix<float> theta) {
     int n = theta.outerSize();
     char r[100];
     char c[100];

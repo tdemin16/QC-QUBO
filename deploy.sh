@@ -3,7 +3,7 @@ g++ -std=c++2a -o3 -m64 -I/usr/include/python3.8 -fopenmp -Wall -Wextra main.cpp
 if [ $? -eq 0 ]; then
     echo ---Builded!---
     ./main
-    echo -----DONE DOING STUPID STUFF------
+    echo ---Done---
 else
     echo Build Failed!
 fi 

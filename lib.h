@@ -5,6 +5,7 @@
 #include <sys/signal.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <chrono>
 #include <cstdio>
@@ -33,25 +34,22 @@ extern mt19937_64 e_uniform_vector;
 extern uniform_real_distribution<double> d_real_uniform;
 extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
+extern int fd[4];
 
 void handle_sigint(int sig);
 
-void init_child(int *fd);
+void init_child();
 
 // init seed in order to generate random numbers
 void init_seeds();
 
 // Input: number of nodes
 // Return: a SparseMatrix A containing CHimera's topology
-SparseMatrix<float> init_A(int n, int *fd);
+SparseMatrix<float> init_A(int n);
 
 // Input: Matrix of order n Q, Vector of n integers z
 // Return: z^T * Q * z
 float fQ(MatrixXf Q, VectorXf x);
-
-// Input: Matrix of order n P, probability of permutation pr
-// Return: Matrix of order n where some raws (with probability pr) are swapped
-MatrixXf g(MatrixXf P, float pr);
 
 // Input: Matrix Q, SparseMatrix A, vector in which store the new permutation, vector from which generate the new permutation, probability of permutation
 // Return: Matrix theta containing the product P^T * Q * P ○ A. permutation will contain the new permutation of indexes. Complexity O(nlogn)
@@ -74,7 +72,7 @@ vector<int> fill(map<int, int> m, vector<int> permutation);
 vector<int> inverse(vector<int> permutation);
 
 #ifndef SIMULATION
-VectorXf send_to_annealer(SparseMatrix<float> theta, int *fd);
+VectorXf send_to_annealer(SparseMatrix<float> theta);
 #endif
 
 // Input: Vector of n integers z, probability pr
