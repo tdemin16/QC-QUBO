@@ -1,7 +1,11 @@
-g++ -std=c++2a -o3 -m64 -I/usr/include/python3.8 -fopenmp -Wall -Wextra main.cpp lib.cpp -o main
+g++ -std=c++2a -o3 -m64 -I/usr/include/python3.8 -fopenmp -Wall -Wextra ./src/main.cpp ./src/lib.cpp ./src/generators.cpp -o ./bin/main
+
+if [ ! -d "./bin" ]; then \
+	mkdir ./bin; fi
 
 if [ $? -eq 0 ]; then
     echo ---Builded!---
+    cd bin/
     ./main
     echo ---Done---
 else

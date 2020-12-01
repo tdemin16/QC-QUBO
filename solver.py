@@ -4,6 +4,7 @@ import os
 import sys
 import dwave_networkx as dnx
 import networkx as nx
+#import matplotlib.pyplot as plt
 
 
 def run_annealer(theta, iteration, workflow):
@@ -33,6 +34,11 @@ def main():
         n_rows += 1
 
     chimera_topology = dnx.chimera_graph(n_rows, n_cols)
+    
+    #if simulation == 1:
+    #    dnx.draw_chimera(chimera_topology, with_labels=True, node_size=500, node_color='g')
+    #    plt.show()
+
     A = nx.adjacency_matrix(chimera_topology)
     r, c = A.nonzero()
     for r, c in zip(r, c):
