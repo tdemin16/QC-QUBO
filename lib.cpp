@@ -18,9 +18,10 @@ void init_child() {
     sprintf(second, "./solver.py");
     char *args[] = {first, second, NULL};
 
-    dup2(fd[READ], STDIN_FILENO);
-    dup2(fd[WRITE + 2], STDOUT_FILENO);
+    dup2(fd[READ], STDIN_FILENO);        // Change child's stdin
+    dup2(fd[WRITE + 2], STDOUT_FILENO);  // Change child's stdout
 
+    // Close pipes
     close(fd[READ]);
     close(fd[WRITE]);
     close(fd[READ + 2]);
@@ -50,6 +51,7 @@ void init_seeds() {
 }
 
 SparseMatrix<float> init_A(int n) {
+// sim tells python if it's a simulation or not
 #ifdef SIMULATION
     int sim = 1;
 #else
@@ -73,18 +75,18 @@ SparseMatrix<float> init_A(int n) {
     sprintf(n_nodes, "%d", n);
     sprintf(simulation, "%d", sim);
 
-    write(fd[WRITE], n_nodes, 6);
-    write(fd[WRITE], simulation, 2);
+    write(fd[WRITE], n_nodes, 6);     // Send number of nodes in the problem
+    write(fd[WRITE], simulation, 2);  // Send if it's a simulation or not
 
     do {
-        read(fd[READ + 2], i, 4);
-        read(fd[READ + 2], j, 4);
+        read(fd[READ + 2], i, 4); // Read i index
+        read(fd[READ + 2], j, 4); // Read j index
         if (strncmp(i, "####", 4) != 0 && strncmp(j, "####", 4) != 0) {
-            r = atoi(i);
-            c = atoi(j);
+            r = atoi(i); // Set r as i index if i is not equal to "####"
+            c = atoi(j); // Set c as j index if j is not equal to "####"
             t.push_back(Triplet<float>(r, c, 1.0f));
         } else
-            end = true;
+            end = true; // if "####" is recived then the matrix is totally sended
     } while (!end);
 
     A.setFromTriplets(t.begin(), t.end());
@@ -138,12 +140,10 @@ void shuffle_map(map<int, int> &m) {
     }
 
     // Shuffle
-    //shuffle(keys.begin(), keys.end(), e_uniform_vector);
-    //random_shuffle(keys.begin(), keys.end());
     shuffle_vector(keys);
 
     vector<int>::iterator it = keys.begin();
-    //substitute old keys with new ones (shuffled)
+    // substitute old keys with new ones (shuffled)
     for (auto &i : m) {
         int ts = i.second;
         i.second = m[*it];
@@ -314,20 +314,6 @@ bool comp_vectors(VectorXf z1, VectorXf z2) {
 }
 
 #ifdef SIMULATION
-SparseMatrix<float> gen_P(vector<int> perm) {
-    long unsigned n = perm.size();
-    SparseMatrix<float> P(n, n);
-    vector<Triplet<float>> t;
-    t.reserve(n);
-
-    for (long unsigned i = 0; i < n; i++) {
-        t.push_back(Triplet<float>(i, perm[i], 1));
-    }
-    P.setFromTriplets(t.begin(), t.end());
-
-    return P;
-}
-
 double compute_Q(MatrixXf Q) {
     int n = Q.outerSize();
     VectorXf x_min(n);

@@ -38,6 +38,7 @@ extern int fd[4];
 
 void handle_sigint(int sig);
 
+// change process code with python solver.py
 void init_child();
 
 // init seed in order to generate random numbers
@@ -72,6 +73,8 @@ vector<int> fill(map<int, int> m, vector<int> permutation);
 vector<int> inverse(vector<int> permutation);
 
 #ifndef SIMULATION
+// Input: Theta matrix
+// Output: z that minimize theta function
 VectorXf send_to_annealer(SparseMatrix<float> theta);
 #endif
 
@@ -105,7 +108,6 @@ double simulated_annealing(double, double, double);
 bool comp_vectors(VectorXf z1, VectorXf z2);
 
 #ifdef SIMULATION
-SparseMatrix<float> gen_P(vector<int> perm);
 double compute_Q(MatrixXf Q);
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
 #else
