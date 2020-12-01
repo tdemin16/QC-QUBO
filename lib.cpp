@@ -191,81 +191,50 @@ vector<int> inverse(vector<int> permutation) {
 
 #ifndef SIMULATION
 VectorXf send_to_annealer(SparseMatrix<float> theta) {
-    /*int n = theta.outerSize();
-    char r[100];
-    char c[100];
-    char val[100];
-    char ret[3];
-    VectorXf z(n);
-
-    memset(r, '\0', sizeof(char) * 100);
-    memset(c, '\0', sizeof(char) * 100);
-    memset(val, '\0', sizeof(char) * 100);  // to be adjusted, could be too small
-
-    for (int i = 0; i < theta.outerSize(); i++) {
-        for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
-            sprintf(r, "%ld", it.row());
-            sprintf(c, "%ld", it.col());
-            sprintf(val, "%lf", it.value());
-
-            write(fd[WRITE], r, 100);  // 100 is very generous
-            write(fd[WRITE], c, 100);
-            write(fd[WRITE], val, 100);
-        }
-    }
-    sprintf(val, "%s", "#\0");
-    write(fd[WRITE], val, 100);*/
-
     int n = theta.outerSize();
     int curr_size = 0;
     char msg[STR_MAX_LEN];
     char val[STR_MAX_LEN];
     char tmp[100];
-    int tmp_size = 0;
     VectorXf z(n);
 
     memset(val, '\0', sizeof(char) * STR_MAX_LEN);
     memset(tmp, '\0', 100);
+    strcpy(msg, "");
 
     for (int i = 0; i < n; i++) {
         for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
             sprintf(tmp, "%ld", it.row());
-            tmp_size = strlen(tmp);
-            strncat(msg, tmp, tmp_size);
-            strncat(msg, ",", 1);
-            curr_size += tmp_size + 1;
+            strcat(msg, tmp);
+            strcat(msg, ",");
+            memset(tmp, '\0', 100);
 
             sprintf(tmp, "%ld", it.col());
-            tmp_size = strlen(tmp);
-            strncat(msg, tmp, tmp_size);
-            strncat(msg, ",", 1);
-            curr_size += tmp_size + 1;
+            strcat(msg, tmp);
+            strcat(msg, ",");
+            memset(tmp, '\0', 100);
 
             sprintf(tmp, "%lf", it.value());
-            tmp_size = strlen(tmp);
-            strncat(msg, tmp, tmp_size);
-            strncat(msg, ",", 1);
-            curr_size += tmp_size + 1;
+            strcat(msg, tmp);
+            strcat(msg, ",");
+            memset(tmp, '\0', 100);
 
-            if (curr_size > 3500) {
-                for (int j = curr_size - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
+            if (strlen(msg) > 3500) {
+                for (int j = strlen(msg) - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
                 write(fd[WRITE], msg, STR_MAX_LEN);
-                cout << msg << endl;
-                curr_size = 0;
                 strcpy(msg, "");
             }
         }
     }
-    if (curr_size > 0) {
-        for (int j = curr_size - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
+    if (strlen(msg) > 0) {
+        for (int j = strlen(msg) - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
         write(fd[WRITE], msg, STR_MAX_LEN);
         cout << msg << endl;
-        curr_size = 0;
+        strcpy(msg, "");
     }
     sprintf(val, "%s", "#\0");
     write(fd[WRITE], val, STR_MAX_LEN);
 
-    curr_size = 0;
     while (curr_size < n) {
         read(fd[READ + 2], msg, STR_MAX_LEN);
         csv_to_vector(z, msg, curr_size);

@@ -53,14 +53,14 @@ def main():
         theta = dict()
         i = 0
 
-        iteration = hybrid.RacingBranches(
-            hybrid.InterruptableTabuSampler(),
-            hybrid.EnergyImpactDecomposer(size=1)
-            | hybrid.QPUSubproblemAutoEmbeddingSampler()
-            | hybrid.SplatComposer()
-        ) | hybrid.ArgMin()
-
-        workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
+        #iteration = hybrid.RacingBranches(
+        #    hybrid.InterruptableTabuSampler(),
+        #    hybrid.EnergyImpactDecomposer(size=1)
+        #    | hybrid.QPUSubproblemAutoEmbeddingSampler()
+        #    | hybrid.SplatComposer()
+        #) | hybrid.ArgMin()
+#
+        #workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
         end = False
         while end == False:
@@ -80,8 +80,8 @@ def main():
                 
             elif(x[0] == "#"):
                 i = 0
-                l = run_annealer(theta, iteration, workflow)
-                #l = {0:-1, 1:1, 2:-1, 3:1, 4:1, 5:-1, 6:1, 7:-1, 8:1, 9:1, 10:-1, 11:1, 12:-1, 13:1, 14:1, 15:-1}
+                #l = run_annealer(theta, iteration, workflow)
+                l = {0:-1, 1:1, 2:-1, 3:1, 4:1, 5:-1, 6:1, 7:-1, 8:1, 9:1, 10:-1, 11:1, 12:-1, 13:1, 14:1, 15:-1}
                 theta.clear()
                 msg = ""
                 size = 0
