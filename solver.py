@@ -31,7 +31,6 @@ def main():
     n_rows = int(n / row)
     if n % row != 0:
         n_rows += 1
-    sys.stderr.write("\n"+str(n)+ " " +str(n_cols) + " " + str(n_rows)+"\n")
 
     chimera_topology = dnx.chimera_graph(n_rows, n_cols)
     A = nx.adjacency_matrix(chimera_topology)
