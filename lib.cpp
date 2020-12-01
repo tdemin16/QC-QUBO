@@ -229,7 +229,6 @@ VectorXf send_to_annealer(SparseMatrix<float> theta) {
     if (strlen(msg) > 0) {
         for (int j = strlen(msg) - 1; j < STR_MAX_LEN; j++) msg[j] = '\0';
         write(fd[WRITE], msg, STR_MAX_LEN);
-        cout << msg << endl;
         strcpy(msg, "");
     }
     sprintf(val, "%s", "#\0");
