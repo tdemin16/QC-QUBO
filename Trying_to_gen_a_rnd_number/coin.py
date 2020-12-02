@@ -18,7 +18,7 @@ def dec(num):
     return dec_value
 
 
-useQpu = True
+useQpu = False
 
 if(useQpu):
     sampler = DWaveSampler()
