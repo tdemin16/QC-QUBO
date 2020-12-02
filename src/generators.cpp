@@ -19,8 +19,8 @@ int number_partitioning_problem(MatrixXf &Q, string file) {
 
     for (int i = 0; i < n; i++) {
         for (int j = i; j < n; j++) {
-            if(i != j) {
-                prod = nums[i] *nums[j];
+            if (i != j) {
+                prod = nums[i] * nums[j];
                 Q(i, j) = prod;
                 Q(j, i) = prod;
             } else {
