@@ -19,6 +19,7 @@
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
 #include "Eigen/SparseCore"
+#include "unsupported/Eigen/KroneckerProduct"
 
 using namespace std;
 using namespace Eigen;
@@ -36,6 +37,8 @@ extern uniform_real_distribution<double> d_real_uniform;
 extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
+
+VectorXf solve(MatrixXf);
 
 void handle_sigint(int sig);
 

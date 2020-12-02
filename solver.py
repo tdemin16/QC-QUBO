@@ -4,7 +4,7 @@ import os
 import sys
 import dwave_networkx as dnx
 import networkx as nx
-#import matplotlib.pyplot as plt
+import scipy
 
 
 def run_annealer(theta, iteration, workflow):
@@ -17,6 +17,21 @@ def run_annealer(theta, iteration, workflow):
     solution = final_state.samples.first.sample
 
     return solution
+
+def chimera(r,c):
+    G = dnx.chimera_graph(r, c)
+    tmp = nx.to_dict_of_lists(G)
+    n = len(tmp)
+    rows = []
+    cols = []
+    for i in range(n):
+        rows.append(i)
+        cols.append(i)
+        for element in tmp[i]:
+            rows.append(i)
+            cols.append(element)
+    
+    return list(zip(rows, cols))
 
 
 def main():
@@ -33,15 +48,9 @@ def main():
     if n % row != 0:
         n_rows += 1
 
-    chimera_topology = dnx.chimera_graph(n_rows, n_cols)
-    
-    #if simulation == 1:
-    #    dnx.draw_chimera(chimera_topology, with_labels=True, node_size=500, node_color='g')
-    #    plt.show()
+    A = chimera(n_rows, n_cols)
 
-    A = nx.adjacency_matrix(chimera_topology)
-    r, c = A.nonzero()
-    for r, c in zip(r, c):
+    for r, c in A:
         msg = str(r)
         msg = ('0' * (4 - len(msg)) + msg).encode()
         os.write(1, msg)
