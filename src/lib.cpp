@@ -101,12 +101,19 @@ VectorXf solve(MatrixXf Q) {
     theta2 = g_strong(Q, A, perm2, perm2, p);
 
 #ifdef SIMULATION
+    cout << "Computing min of Q" << endl;
     double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
 
+    cout << "Computing z1" << endl;
     z1 = map_back(min_energy(theta1), perm1);
+
+    cout << "Computing z2" << endl;
     z2 = map_back(min_energy(theta2), perm2);
 #else
+    cout << "Computing z1" << endl;
     z1 = map_back(send_to_annealer(theta1), perm1);
+
+    cout << "Computing z2" << endl;
     z2 = map_back(send_to_annealer(theta2), perm2);
 #endif
 
@@ -141,6 +148,8 @@ VectorXf solve(MatrixXf Q) {
 
     int i = 1;
     do {
+        if (i == 1) cout << "Start computing the solution" << endl
+                         << endl;
         start = chrono::steady_clock::now();
         perturbed = false;
         simul_ann = false;
@@ -306,14 +315,14 @@ SparseMatrix<float> init_A(int n) {
     write(fd[WRITE], simulation, 2);  // Send if it's a simulation or not
 
     do {
-        read(fd[READ + 2], i, 4); // Read i index
-        read(fd[READ + 2], j, 4); // Read j index
+        read(fd[READ + 2], i, 4);  // Read i index
+        read(fd[READ + 2], j, 4);  // Read j index
         if (strncmp(i, "####", 4) != 0 && strncmp(j, "####", 4) != 0) {
-            r = atoi(i); // Set r as i index if i is not equal to "####"
-            c = atoi(j); // Set c as j index if j is not equal to "####"
+            r = atoi(i);  // Set r as i index if i is not equal to "####"
+            c = atoi(j);  // Set c as j index if j is not equal to "####"
             t.push_back(Triplet<float>(r, c, 1.0f));
         } else
-            end = true; // if "####" is recived then the matrix is totally sended
+            end = true;  // if "####" is recived then the matrix is totally sended
     } while (!end);
 
     A.setFromTriplets(t.begin(), t.end());

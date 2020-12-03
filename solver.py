@@ -1,22 +1,36 @@
 import dimod
-import hybrid
 import os
 import sys
 import dwave_networkx as dnx
 import networkx as nx
 import scipy
+from dwave.system.samplers import DWaveSampler
+from dwave.system.composites import EmbeddingComposite
 
 
-def run_annealer(theta, iteration, workflow):
-    # Build the QUBO problem
-    bqm = dimod.BinaryQuadraticModel({}, theta, 0, dimod.SPIN)
+#def run_annealer(theta, iteration, workflow):
+#    # Build the QUBO problem
+#    bqm = dimod.BinaryQuadraticModel({}, theta, 0, dimod.SPIN)
+#
+#    # Solve
+#    init_state = hybrid.State.from_problem(bqm)
+#    final_state = workflow.run(init_state).result()
+#    solution = final_state.samples.first.sample
+#
+#    return solution
 
-    # Solve
-    init_state = hybrid.State.from_problem(bqm)
-    final_state = workflow.run(init_state).result()
-    solution = final_state.samples.first.sample
+def run_annealer(theta, sampler):
+    bqm = dimod.BinaryQuadraticModel({}, theta, dimod.SPIN)
+    response = sampler.sample_qubo(bqm, num_reads=1)
+    l = []
+    
+    for datum in response.data():
+        for key in datum.sample:
+            l.append(datum.sample[key])
+            pass
+        pass
 
-    return solution
+    return l 
 
 def chimera(r,c):
     G = dnx.chimera_graph(r, c)
@@ -65,16 +79,18 @@ def main():
 
 
     if(simulation == 0):
+        sampler = DWaveSampler()
+        sampler = EmbeddingComposite(sampler)
         theta = dict()
         i = 0
-        iteration = hybrid.RacingBranches(
-            hybrid.InterruptableTabuSampler(),
-            hybrid.EnergyImpactDecomposer(size=1)
-            | hybrid.QPUSubproblemAutoEmbeddingSampler()
-            | hybrid.SplatComposer()
-        ) | hybrid.ArgMin()
-
-        workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
+        #iteration = hybrid.RacingBranches(
+        #    hybrid.InterruptableTabuSampler(),
+        #    hybrid.EnergyImpactDecomposer(size=1)
+        #    | hybrid.QPUSubproblemAutoEmbeddingSampler()
+        #    | hybrid.SplatComposer()
+        #) | hybrid.ArgMin()
+#
+        #workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
         end = False
         while end == False:
@@ -93,7 +109,8 @@ def main():
 
             elif(x[0] == "#"):  # compute problem
                 i = 0
-                l = run_annealer(theta, iteration, workflow)
+                #l = run_annealer(theta, iteration, workflow)
+                l = run_annealer(theta, sampler)
 
                 for j in range(len(l)):
                     if(l[j] == 1):
