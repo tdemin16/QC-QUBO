@@ -29,7 +29,7 @@ def rand():
 
     bqm = {}
 
-    bits = 4
+    bits = 5436
 
     for i in range(0, bits):
         bqm[(i, i)] = 0
@@ -40,9 +40,15 @@ def rand():
     total = time.time() - start
 
     num = []
+    i = -1
     for datum in response.data():
         for key in datum.sample:
+            i += 1
             num.append(datum.sample[key])
+            if(i == 11):
+                print(dec(num))
+                i = 0
+                num = []
 
     print(total)
     print(bits)

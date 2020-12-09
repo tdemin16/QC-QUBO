@@ -26,6 +26,8 @@ using namespace Eigen;
 
 #define READ 0
 #define WRITE 1
+#define BINARY 0
+#define SPIN -1
 
 extern mt19937_64 e_uniform_g;
 extern mt19937_64 e_uniform_h;
@@ -38,12 +40,12 @@ extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXf solve(MatrixXf);
+VectorXf solve(MatrixXf, int mode=BINARY);
 
 void handle_sigint(int sig);
 
 // change process code with python solver.py
-void init_child();
+void init_child(int mode);
 
 // init seed in order to generate random numbers
 void init_seeds();
@@ -84,7 +86,7 @@ VectorXf send_to_annealer(SparseMatrix<float> theta);
 
 // Input: Vector of n integers z, probability pr
 // With probability pr, the element zi = -zi
-void h(VectorXf &z, double pr);
+void h(VectorXf &z, double pr, int mode);
 
 // Input: λ0, i, e
 // Return: Minimum between λ0 and λ0/(2+i-e)
@@ -92,7 +94,7 @@ double min(double lambda0, int i, int e);
 
 // Input: weight theta
 // Return: VectorXf that minimize the weight function
-VectorXf min_energy(SparseMatrix<float> theta);
+VectorXf min_energy(SparseMatrix<float> theta, int mode);
 
 // Input: weight function theta, VectorXf x = {-1, 1}^n
 // Return: E(theta, x)
@@ -100,7 +102,7 @@ double E(SparseMatrix<float> theta, VectorXf x);
 
 // Input: VectorXf of {-1, 1}^n v
 // Treats the vector as a binary number but made of -1 and 1(instead of 0 and 1). Performs the increment
-void increment(VectorXf &v);
+void increment(VectorXf &v, int mode);
 
 VectorXf map_back(VectorXf z, vector<int> perm);
 
@@ -112,7 +114,7 @@ double simulated_annealing(double, double, double);
 bool comp_vectors(VectorXf z1, VectorXf z2);
 
 #ifdef SIMULATION
-double compute_Q(MatrixXf Q);
+double compute_Q(MatrixXf Q, int mode);
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
 #else
 void log(double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);

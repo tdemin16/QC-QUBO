@@ -3,6 +3,7 @@
 
 #include "lib.h"
 
-int number_partitioning_problem(MatrixXf &Q, string file = "../test/input16.txt");
+int number_partitioning_problem(MatrixXf &Q, string file = "../test/npp16.txt");
+void quadratic_assignment(MatrixXf &Q, string file);
 
 #endif

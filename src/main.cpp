@@ -4,14 +4,19 @@
 using namespace std;
 using namespace Eigen;
 
+/*
+BINARY computes using vectors of {0, 1}^n
+SPIN computes using vecotrs of {-1, 1}^n
+*/
+
 int main() {
     MatrixXf Q;  // QUBO Problem Matrix
     
-    int c = number_partitioning_problem(Q);
+    int c = number_partitioning_problem(Q, "../test/npp8.txt");
 
-    VectorXf sol = solve(Q);
+    VectorXf sol = solve(Q, BINARY);
 
-    cout << "z*: " << sol.transpose() << endl;
-
+    cout << sol.transpose() << endl;
+    
     return 0;
 }

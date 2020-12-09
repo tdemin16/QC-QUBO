@@ -11,12 +11,15 @@ uniform_int_distribution<unsigned long long> d_int_uniform(0, 2048);
 pid_t child_pid;
 int fd[4];
 
-VectorXf solve(MatrixXf Q) {
+VectorXf solve(MatrixXf Q, int mode) {
     //Init
     int n = Q.outerSize();
 
     if (n % 8 != 0 || n == 0) {
         cout << "[Warning] n must be multiple of 8" << endl;
+        exit(1);
+    } else if (mode != BINARY && mode != SPIN) {
+        cout << "[Warning] mode must be 0 or 1" << endl;
         exit(1);
     }
 
@@ -37,7 +40,7 @@ VectorXf solve(MatrixXf Q) {
     child_pid = fork();
 
     if (child_pid == 0) {
-        init_child();
+        init_child(mode);
 
     } else if (child_pid == -1) {
         cout << "[FORK ERROR - CLOSING]" << endl;
@@ -56,9 +59,9 @@ VectorXf solve(MatrixXf Q) {
     int N = 20;             // Decreasing time
 
     //Termination Parameters
-    int imax = 3000;  // Max number of iteration
-    int Nmax = 50;    // Max number of solution equal to the best one + solution worse than the best one
-    int dmin = 30;    // Number of solution that are worse than the best beyond which the best solution is not valid anymore
+    int imax = 1000;  // Max number of iteration
+    int Nmax = 50;   // Max number of solution equal to the best one + solution worse than the best one
+    int dmin = 30;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
     MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
@@ -102,13 +105,13 @@ VectorXf solve(MatrixXf Q) {
 
 #ifdef SIMULATION
     cout << "Computing min of Q" << endl;
-    double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
+    double minimum = compute_Q(Q, mode);  // Global minimum of Q, only for simulation pourposes
 
     cout << "Computing z1" << endl;
-    z1 = map_back(min_energy(theta1), perm1);
+    z1 = map_back(min_energy(theta1, mode), perm1);
 
     cout << "Computing z2" << endl;
-    z2 = map_back(min_energy(theta2), perm2);
+    z2 = map_back(min_energy(theta2, mode), perm2);
 #else
     cout << "Computing z1" << endl;
     z1 = map_back(send_to_annealer(theta1), perm1);
@@ -161,12 +164,12 @@ VectorXf solve(MatrixXf Q) {
 
         theta_first = g_strong(Q_first, A, perm, perm_star, p);
 #ifdef SIMULATION
-        z_first = map_back(min_energy(theta_first), perm);
+        z_first = map_back(min_energy(theta_first, mode), perm);
 #else
         z_first = map_back(send_to_annealer(theta_first), perm);
 #endif
         if (d_real_uniform(e_uniform_pert) <= q) {
-            h(z_first, p);  // possibly perturb the candidate
+            h(z_first, p, mode);  // possibly perturb the candidate
             perturbed = true;
         }
 
@@ -245,14 +248,17 @@ void handle_sigint(int sig) {
     wait(NULL);
 }
 
-void init_child() {
+void init_child(int mode) {
     char first[20];
     char second[16];
+    char third[3];
     memset(first, '\0', sizeof(char) * 20);
     memset(second, '\0', sizeof(char) * 16);
+    memset(third, '\0', sizeof(char) * 3);
     sprintf(first, "python3");
     sprintf(second, "../solver.py");
-    char *args[] = {first, second, NULL};
+    sprintf(third, "%d", mode);
+    char *args[] = {first, second, third, NULL};
 
     dup2(fd[READ], STDIN_FILENO);        // Change child's stdin
     dup2(fd[WRITE + 2], STDOUT_FILENO);  // Change child's stdout
@@ -460,11 +466,11 @@ VectorXf send_to_annealer(SparseMatrix<float> theta) {
 }
 #endif
 
-void h(VectorXf &z, double pr) {
+void h(VectorXf &z, double pr, int mode) {
     int n = z.size();
 
     for (int i = 0; i < n; i++) {
-        if (d_real_uniform(e_uniform_h) <= pr) z(i) = -z(i);
+        if (d_real_uniform(e_uniform_h) <= pr) mode == SPIN ? z(i) = -z(i) : z(i) = (int)(z(i) + 1) % 2;
     }
 }
 
@@ -475,20 +481,20 @@ double min(double lambda0, int i, int e) {
     return lambda_first;
 }
 
-VectorXf min_energy(SparseMatrix<float> theta) {
+VectorXf min_energy(SparseMatrix<float> theta, int mode) {
     int n = theta.outerSize();
     unsigned long long N = pow(2, n);  // Overflow with n > 64, not a problem since is a simulation
     VectorXf x_min(n);
     VectorXf x(n);
     double min;
     double e;
-    for (int i = 0; i < n; i++) x(i) = -1;
+    for (int i = 0; i < n; i++) x(i) = mode;
 
     min = E(theta, x);
     x_min = x;
     unsigned long long i = 1;
     do {
-        increment(x);
+        increment(x, mode);
         e = E(theta, x);
         if (e < min) {
             x_min = x;
@@ -515,11 +521,11 @@ double E(SparseMatrix<float> theta, VectorXf x) {
     return e;
 }
 
-void increment(VectorXf &v) {  // O(1) per l'analisi ammortizzata
+void increment(VectorXf &v, int mode) {  // O(1) per l'analisi ammortizzata
     int n = v.size();
     int i = 0;
     while (i < n && v(i) == 1) {
-        v(i) = -1;
+        v(i) = mode;
         i++;
     }
     if (i < n) v(i) = 1;
@@ -550,27 +556,26 @@ bool comp_vectors(VectorXf z1, VectorXf z2) {
 }
 
 #ifdef SIMULATION
-double compute_Q(MatrixXf Q) {
+double compute_Q(MatrixXf Q, int mode) {
     int n = Q.outerSize();
     VectorXf x_min(n);
     VectorXf x(n);
     unsigned long long N = pow(2, n);
     double min, e;
-    for (int i = 0; i < n; i++) x(i) = -1;
+    for (int i = 0; i < n; i++) x(i) = mode;
 
     min = fQ(Q, x);
     x_min = x;
     unsigned long long i = 1;
     do {
-        increment(x);
+        increment(x, mode);
         e = fQ(Q, x);
-        if (e < min) {
+        if (e <= min) {
             x_min = x;
             min = e;
         }
         i++;
     } while (i < N);
-
     return min;
 }
 

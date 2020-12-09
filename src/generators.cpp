@@ -7,6 +7,10 @@ int number_partitioning_problem(MatrixXf &Q, string file) {
     int prod;
     ifstream in;
     in.open(file);
+    if(in.fail()) {
+        cout << "File doesn't exist" << endl;
+        exit(1);
+    }
 
     in >> n;
     nums.reserve(n);

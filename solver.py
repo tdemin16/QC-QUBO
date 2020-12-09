@@ -19,7 +19,7 @@ from dwave.system.composites import EmbeddingComposite
 #
 #    return solution
 
-def run_annealer(theta, sampler):
+def run_annealer(theta, sampler, mode):
     bqm = dimod.BinaryQuadraticModel({}, theta, dimod.SPIN)
     response = sampler.sample_qubo(bqm, num_reads=1)
     l = []
@@ -49,6 +49,7 @@ def chimera(r,c):
 
 
 def main():
+    mode = sys.argv[1]
     n = sys.stdin.read(6)
     n = int(n.split('\x00', 1)[0])
     
@@ -110,7 +111,7 @@ def main():
             elif(x[0] == "#"):  # compute problem
                 i = 0
                 #l = run_annealer(theta, iteration, workflow)
-                l = run_annealer(theta, sampler)
+                l = run_annealer(theta, sampler, mode)
 
                 for j in range(len(l)):
                     if(l[j] == 1):
