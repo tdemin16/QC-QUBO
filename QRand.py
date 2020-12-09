@@ -40,7 +40,7 @@ def rand():
     total = time.time() - start
 
     num = []
-    i = -1
+    i = 0
     for datum in response.data():
         for key in datum.sample:
             i += 1
