@@ -41,7 +41,6 @@ VectorXf solve(MatrixXf Q, int mode) {
 
     if (child_pid == 0) {
         init_child(mode);
-
     } else if (child_pid == -1) {
         cout << "[FORK ERROR - CLOSING]" << endl;
         exit(4);
@@ -218,14 +217,14 @@ VectorXf solve(MatrixXf Q, int mode) {
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
+#ifndef SIMULATION
+    close_child();
+#endif
+
     close(fd[READ]);
     close(fd[WRITE]);
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
-
-#ifndef SIMULATION
-    kill(child_pid, SIGKILL);
-#endif
 
     printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
     printf("k:%d\n", k);
@@ -237,15 +236,6 @@ VectorXf solve(MatrixXf Q, int mode) {
          << endl;
 
     return z_gold;
-}
-
-void handle_sigint(int sig) {
-    char send[100];
-    memset(send, '\0', 100);
-    sprintf(send, "%s", "END");
-
-    write(fd[WRITE], send, 100);
-    wait(NULL);
 }
 
 void init_child(int mode) {
@@ -553,6 +543,15 @@ bool comp_vectors(VectorXf z1, VectorXf z2) {
         if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
     }
     return true;
+}
+
+void close_child() {
+    char send[100];
+    memset(send, '\0', 100);
+    sprintf(send, "%s", "END");
+
+    write(fd[WRITE], send, 100);
+    wait(NULL);
 }
 
 #ifdef SIMULATION

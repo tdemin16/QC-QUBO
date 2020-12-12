@@ -4,33 +4,26 @@ import sys
 import dwave_networkx as dnx
 import networkx as nx
 import scipy
+import signal
 from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import EmbeddingComposite
 
 
-def run_annealer(theta, iteration, workflow):
-    # Build the QUBO problem
-    bqm = dimod.BinaryQuadraticModel({}, theta, 0, dimod.SPIN)
+def handler(signum, frame):
+    exit(0)
 
-    # Solve
-    init_state = hybrid.State.from_problem(bqm)
-    final_state = workflow.run(init_state).result()
-    solution = final_state.samples.first.sample
+def run_annealer(theta, sampler, mode):
+    bqm = dimod.BinaryQuadraticModel({}, theta, dimod.SPIN)
+    response = sampler.sample_qubo(bqm, num_reads=5)
+    l = []
+    
+    for datum in response.data():
+        for key in datum.sample:
+            l.append(datum.sample[key])
+            pass
+        pass
 
-    return solution
-
-#def run_annealer(theta, sampler, mode):
-#    bqm = dimod.BinaryQuadraticModel({}, theta, dimod.SPIN)
-#    response = sampler.sample_qubo(bqm, num_reads=1)
-#    l = []
-#    
-#    for datum in response.data():
-#        for key in datum.sample:
-#            l.append(datum.sample[key])
-#            pass
-#        pass
-#
-#    return l 
+    return l 
 
 def chimera(r,c):
     G = dnx.chimera_graph(r, c)
@@ -49,6 +42,7 @@ def chimera(r,c):
 
 
 def main():
+    signal.signal(signal.SIGINT, handler)
     mode = sys.argv[1]
     n = sys.stdin.read(6)
     n = int(n.split('\x00', 1)[0])
@@ -84,14 +78,6 @@ def main():
         sampler = EmbeddingComposite(sampler)
         theta = dict()
         i = 0
-        iteration = hybrid.RacingBranches(
-            hybrid.InterruptableTabuSampler(),
-            hybrid.EnergyImpactDecomposer(size=1)
-            | hybrid.QPUSubproblemAutoEmbeddingSampler()
-            | hybrid.SplatComposer()
-        ) | hybrid.ArgMin()
-
-        workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
 
         end = False
         while end == False:
@@ -110,8 +96,8 @@ def main():
 
             elif(x[0] == "#"):  # compute problem
                 i = 0
-                l = run_annealer(theta, iteration, workflow)
-                #l = run_annealer(theta, sampler, mode)
+                l = run_annealer(theta, sampler, mode)
+                #l = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
                 for j in range(len(l)):
                     if(l[j] == 1):
@@ -127,6 +113,7 @@ def main():
             
             else:
                 end = True
+                sys.stderr.write("Closing Python\n")
                 pass
             pass
 

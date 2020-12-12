@@ -113,6 +113,8 @@ double simulated_annealing(double, double, double);
 // Return: true iff they are equal, false otherwise
 bool comp_vectors(VectorXf z1, VectorXf z2);
 
+void close_child();
+
 #ifdef SIMULATION
 double compute_Q(MatrixXf Q, int mode);
 void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);

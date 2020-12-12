@@ -12,7 +12,7 @@ SPIN computes using vecotrs of {-1, 1}^n
 int main() {
     MatrixXf Q;  // QUBO Problem Matrix
     
-    int c = number_partitioning_problem(Q, "../test/npp8.txt");
+    int c = number_partitioning_problem(Q, "../test/npp2048.txt");
 
     VectorXf sol = solve(Q, BINARY);
 
