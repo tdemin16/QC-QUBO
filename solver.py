@@ -92,7 +92,7 @@ def main():
     if(simulation == 0):
         sampler = DWaveSampler()
         sampler = EmbeddingComposite(sampler)
-        theta = dict()
+        theta = {}
         i = 0
 
         end = False
@@ -105,7 +105,7 @@ def main():
                 elif i == 1:
                     c = int(x)
                 else:
-                    theta[r, c] = float(x)
+                    theta[(r, c)] = float(x)
                     pass
 
                 i = (i + 1) % 3
@@ -117,7 +117,7 @@ def main():
 
                 send_msg(l, mode)
 
-                theta.clear()  # clear dictionary
+                theta = {}  # clear dictionary
                 pass
             
             else:
