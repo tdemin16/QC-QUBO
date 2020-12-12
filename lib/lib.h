@@ -40,7 +40,7 @@ extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXf solve(MatrixXf, int mode=BINARY);
+VectorXf solve(MatrixXf Q, int max_it=1000, int mode=BINARY);
 
 void handle_sigint(int sig);
 

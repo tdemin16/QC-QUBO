@@ -12,9 +12,9 @@ SPIN computes using vecotrs of {-1, 1}^n
 int main() {
     MatrixXf Q;  // QUBO Problem Matrix
     
-    int c = number_partitioning_problem(Q, "../test/npp2048.txt");
+    int c = number_partitioning_problem(Q, "../test/npp8.txt");
 
-    VectorXf sol = solve(Q, BINARY);
+    VectorXf sol = solve(Q, 10, BINARY);
 
     cout << sol.transpose() << endl;
     

@@ -39,6 +39,21 @@ def chimera(n):
 
     return list(zip(rows, cols))
 
+def send_msg(l, mode):
+    if mode == -1:
+        for j in range(len(l)):
+            if(l[j] == 1):
+                msg = ("+" + str(l[j])).encode()
+            else:
+                l[j] = 1
+                msg = ("-" + str(l[j])).encode()
+            os.write(1, msg)  # write solution on pipe
+            pass
+    else:
+        for j in range(len(l)):
+            msg = (" " + str(l[j])).encode()
+            os.write(1, msg)
+
 
 def main():
     signal.signal(signal.SIGINT, handler)
@@ -100,14 +115,7 @@ def main():
                 l = run_annealer(theta, sampler, mode)
                 #l = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
-                for j in range(len(l)):
-                    if(l[j] == 1):
-                        msg = ("+" + str(l[j])).encode()
-                    else:
-                        l[j] = 1
-                        msg = ("-" + str(l[j])).encode()
-                    os.write(1, msg)  # write solution on pipe
-                    pass
+                send_msg(l, mode)
 
                 theta.clear()  # clear dictionary
                 pass
