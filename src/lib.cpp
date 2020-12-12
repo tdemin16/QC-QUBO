@@ -7,7 +7,7 @@ mt19937_64 e_uniform_ann;
 mt19937_64 e_uniform_pert;
 mt19937_64 e_uniform_vector;
 uniform_real_distribution<double> d_real_uniform;
-uniform_int_distribution<unsigned long long> d_int_uniform(0, 2048);
+uniform_int_distribution<unsigned long long> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
@@ -384,13 +384,12 @@ void shuffle_map(map<int, int> &m) {
     }
 }
 
-// Not used
 void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     int n = v.size();
     int j;
 
     for (int i = n - 1; i >= 0; i--) {
-        j = d_int_uniform(e_uniform_vector) * i / 2047;
+        j = d_int_uniform(e_uniform_vector) * i / 5435;
         swap(v[i], v[j]);
     }
 }

@@ -13,8 +13,7 @@ def handler(signum, frame):
     exit(0)
 
 def run_annealer(theta, sampler, mode):
-    bqm = dimod.BinaryQuadraticModel({}, theta, dimod.SPIN)
-    response = sampler.sample_qubo(bqm, num_reads=5)
+    response = sampler.sample_qubo(theta, num_reads=1)
     l = []
     
     for datum in response.data():
@@ -25,19 +24,19 @@ def run_annealer(theta, sampler, mode):
 
     return l 
 
-def chimera(r,c):
-    G = dnx.chimera_graph(r, c)
+def chimera(n):
+    G = dnx.chimera_graph(16)
     tmp = nx.to_dict_of_lists(G)
-    n = len(tmp)
     rows = []
     cols = []
     for i in range(n):
         rows.append(i)
         cols.append(i)
-        for element in tmp[i]:
-            rows.append(i)
-            cols.append(element)
-    
+        for j in tmp[i]:
+            if(j < n):
+                rows.append(i)
+                cols.append(j)
+
     return list(zip(rows, cols))
 
 
@@ -50,14 +49,15 @@ def main():
     simulation = sys.stdin.read(2)
     simulation = int(simulation.split('\x00', 1)[0])
 
-    row = 16 * 8
-    if(n >= row): n_cols = 16
-    else: n_cols = n / 8
-    n_rows = int(n / row)
-    if n % row != 0:
-        n_rows += 1
+    #row = 16 * 8
+    #if(n >= row): n_cols = 16
+    #else: n_cols = n / 8
+    #n_rows = int(n / row)
+    #if n % row != 0:
+    #    n_rows += 1
 
-    A = chimera(n_rows, n_cols)
+    #A = chimera(n_rows, n_cols, n)
+    A = chimera(n)
 
     for r, c in A:
         msg = str(r)
@@ -68,6 +68,7 @@ def main():
         msg = ('0' * (4 - len(msg)) + msg).encode()
         os.write(1, msg)
         pass
+
     msg = ("####").encode()
     os.write(1, msg)
     os.write(1, msg)
