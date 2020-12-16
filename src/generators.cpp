@@ -41,7 +41,7 @@ float NPP::diff(const MatrixXf &Q, const VectorXf &x, float c){
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
 }
 
-float QAP::quadratic_assignment(MatrixXf &Q, string file) {
+float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
     int n;
     long long N;
     float pen;

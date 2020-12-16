@@ -17,16 +17,11 @@ def handler(signum, frame):
 def run_annealer(theta, sampler):
     # Run the annealer 4 times with theta matrix
     response = sampler.sample_qubo(theta, num_reads=4)
-    l = []
     
-    # Store the result in a list
-    for datum in response.data():
-        for key in datum.sample:
-            l.append(datum.sample[key])
-            pass
-        pass
+    # Samples are orderes from lowest energy to highest -> fist sample has lowest energy
+    response = sampler.first.sample 
 
-    return l 
+    return response
 
 # Given n number of nodes, generates a chimera graph of n nodes
 def chimera(n):
@@ -43,7 +38,7 @@ def chimera(n):
 
         # Append each edge within the predefined range
         for j in tmp[i]:
-            if(j < n):
+            if (j < n):
                 rows.append(i)
                 cols.append(j)
 
@@ -51,8 +46,8 @@ def chimera(n):
 
 # Given n number of nodes, generates a pegasus graph of n nodes
 # If simulation = 0, then return a graph with only active qbits
-def pegasus(n, simulation):
-    G = dnx.pegasus_graph(16, fabric_only=(not simulation))
+def pegasus(n):
+    G = dnx.pegasus_graph(16, fabric_only=False)
     tmp = nx.to_dict_of_lists(G)
     rows = []
     cols = []
@@ -65,7 +60,7 @@ def pegasus(n, simulation):
 
         # Append each edge within the predefined range
         for j in tmp[i]:
-            if(j < n):
+            if (j < n):
                 rows.append(i)
                 cols.append(j)
 
@@ -91,7 +86,9 @@ def send_msg(l, mode):
 
 def main():
     signal.signal(signal.SIGINT, handler) # Add signal handling
+    
     mode = sys.argv[1]                    # Read mode from argv
+    
     n = sys.stdin.read(10)                # Read problem's dimension from stdin (pipe)
     n = int(n.split('\x00', 1)[0])        # Decode the dimension
     len_n = len(str(n))
@@ -99,7 +96,7 @@ def main():
     simulation = sys.stdin.read(2)                   # Read type of run from stdin (could be a simulation or not)
     simulation = int(simulation.split('\x00', 1)[0]) # Decode the type of run
     
-    A = pegasus(n, simulation) # Generate a chimera graph given a a dimension n
+    A = pegasus(n) # Generate a chimera graph given a a dimension n
 
     '''
     Foreach couple of rows and columns
@@ -145,15 +142,13 @@ def main():
 
                 i = (i + 1) % 3
 
-            elif(x[0] == "#"):  # if # is received, compute the minimum
+            elif(x[0] == "#"):  # if '#' is received, compute the minimum
                 i = 0
                 l = run_annealer(theta, sampler) # run the annealer with theta and sampler
-                #l = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
                 send_msg(l, mode) # Send the result
 
                 theta = {}  # clear dictionary
-                pass
             
             else:
                 end = True

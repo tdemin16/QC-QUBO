@@ -11,7 +11,7 @@ class NPP {
 
 class QAP {
    public:
-    static float quadratic_assignment(MatrixXf &Q, string file);
+    static float quadratic_assignment_problem(MatrixXf &Q, string file);
     static float y(const MatrixXf &Q, const VectorXf &x, float penalty);
 };
 
