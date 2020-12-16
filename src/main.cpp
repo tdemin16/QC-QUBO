@@ -1,5 +1,5 @@
-#include "../lib/lib.h"
 #include "../lib/generators.h"
+#include "../lib/lib.h"
 
 using namespace std;
 using namespace Eigen;
@@ -7,16 +7,15 @@ using namespace Eigen;
 /*
 BINARY computes using vectors of {0, 1}^n
 SPIN computes using vecotrs of {-1, 1}^n
+
+Use solve() to compute a QUBO problem
 */
 
 int main() {
-    MatrixXf Q;  // QUBO Problem Matrix
-    
-    int c = number_partitioning_problem(Q, "../test/npp8.txt");
+    MatrixXf Q;
+    float c = NPP::number_partitioning_problem(Q, "../test/npp16.txt");
+    VectorXf x = solve(Q, 1000, BINARY, true);
+    cout << NPP::diff(Q, x, c) << endl;
 
-    VectorXf sol = solve(Q, 10, BINARY);
-
-    cout << sol.transpose() << endl;
-    
     return 0;
 }

@@ -11,17 +11,21 @@ uniform_int_distribution<unsigned long long> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
-VectorXf solve(MatrixXf Q, int max_it, int mode) {
+VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
     //Init
     int n = Q.outerSize();
 
-    if (n % 8 != 0 || n == 0) {
-        cout << "[Warning] n must be multiple of 8" << endl;
-        exit(1);
-    } else if (mode != BINARY && mode != SPIN) {
+    if (mode != BINARY && mode != SPIN) {
         cout << "[Warning] mode must be 0 or 1" << endl;
         exit(1);
     }
+
+    #ifdef SIMULATION
+    if(n > 64) {
+        cout << "[Warning] problem's dimensions are too big for a classical computation" << endl;
+        exit(1);
+    }
+    #endif
 
     /*---------------------------
         fd[READ] child read
@@ -59,8 +63,8 @@ VectorXf solve(MatrixXf Q, int max_it, int mode) {
 
     //Termination Parameters
     int imax = max_it;  // Max number of iteration
-    int Nmax = 50;   // Max number of solution equal to the best one + solution worse than the best one
-    int dmin = 30;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
+    int Nmax = 50;      // Max number of solution equal to the best one + solution worse than the best one
+    int dmin = 30;      // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
     MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
@@ -194,9 +198,9 @@ VectorXf solve(MatrixXf Q, int max_it, int mode) {
             }
 
             // Best solutions yet
-            if (f_first < f_gold) {
-                z_gold = z_first;
-                f_gold = f_first;
+            if (f_star < f_gold) {
+                z_gold = z_star;
+                f_gold = f_star;
             }
 
             lambda = min(lambda0, i - 1, e);
@@ -205,15 +209,17 @@ VectorXf solve(MatrixXf Q, int max_it, int mode) {
         }
 
 #ifdef SIMULATION
-        log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
+        if (logs) log(z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
 #else
-        log(f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
+        if (logs) log(f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i);
 #endif
         end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
-        cout << endl
-             << diff.count() << "s" << endl
-             << endl;
+        if (logs) {
+            cout << endl
+                 << diff.count() << "s" << endl
+                 << endl;
+        }
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
@@ -226,14 +232,16 @@ VectorXf solve(MatrixXf Q, int max_it, int mode) {
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
 
-    printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
-    printf("k:%d\n", k);
-    printf("imax:%d, Nmax:%d, dmin:%d\n", imax, Nmax, dmin);
-    printf("e:%d\td:%d\ti:%d\n", e, d, i - 1);
+    if (logs) {
+        printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
+        printf("k:%d\n", k);
+        printf("imax:%d, Nmax:%d, dmin:%d\n", imax, Nmax, dmin);
+        printf("e:%d\td:%d\ti:%d\n", e, d, i - 1);
 
-    cout << endl
-         << "f_gold: " << f_gold << endl
-         << endl;
+        cout << endl
+             << "f_gold: " << f_gold << endl
+             << endl;
+    }
 
     return z_gold;
 }
@@ -289,31 +297,33 @@ SparseMatrix<float> init_A(int n) {
 #else
     int sim = 0;
 #endif
-    char n_nodes[6];
+    char n_nodes[10];
     char simulation[2];
-    char i[5];
-    char j[5];
     int r;
     int c;
+    int len_n = (to_string(n)).length();
+    char i[len_n + 1];
+    char j[len_n + 1];
     bool end = false;
     SparseMatrix<float> A(n, n);
     vector<Triplet<float>> t;
 
-    memset(n_nodes, '\0', sizeof(char) * 6);
+    memset(n_nodes, '\0', sizeof(char) * 10);
     memset(simulation, '\0', sizeof(char) * 2);
-    memset(i, '\0', 5);
-    memset(j, '\0', 5);
+    memset(i, '\0', len_n + 1);
+    memset(j, '\0', len_n + 1);
 
     sprintf(n_nodes, "%d", n);
     sprintf(simulation, "%d", sim);
 
-    write(fd[WRITE], n_nodes, 6);     // Send number of nodes in the problem
+    write(fd[WRITE], n_nodes, 10);    // Send number of nodes in the problem
     write(fd[WRITE], simulation, 2);  // Send if it's a simulation or not
 
     do {
-        read(fd[READ + 2], i, 4);  // Read i index
-        read(fd[READ + 2], j, 4);  // Read j index
-        if (strncmp(i, "####", 4) != 0 && strncmp(j, "####", 4) != 0) {
+        read(fd[READ + 2], i, len_n);  // Read i index
+        read(fd[READ + 2], j, len_n);  // Read j index
+
+        if (strncmp(i, "#", 1) != 0 && strncmp(j, "#", 1) != 0) {
             r = atoi(i);  // Set r as i index if i is not equal to "####"
             c = atoi(j);  // Set c as j index if j is not equal to "####"
             t.push_back(Triplet<float>(r, c, 1.0f));
@@ -329,7 +339,7 @@ float fQ(MatrixXf Q, VectorXf x) {
     return x.transpose() * Q * x;
 }
 
-SparseMatrix<float> g_strong(MatrixXf Q, SparseMatrix<float> A, vector<int> &permutation, vector<int> old_permutation, double pr) {
+SparseMatrix<float> g_strong(const MatrixXf &Q, const SparseMatrix<float> &A, vector<int> &permutation, const vector<int> &old_permutation, double pr) {
     int n = Q.outerSize();
     map<int, int> m;
     SparseMatrix<float> theta(n, n);
@@ -394,7 +404,7 @@ void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     }
 }
 
-vector<int> fill(map<int, int> m, vector<int> permutation) {
+vector<int> fill(const map<int, int> &m, const vector<int> &permutation) {
     int n = permutation.size();
     vector<int> filled(n);
     auto end = m.end();
@@ -411,7 +421,7 @@ vector<int> fill(map<int, int> m, vector<int> permutation) {
     return filled;
 }
 
-vector<int> inverse(vector<int> permutation) {
+vector<int> inverse(const vector<int> &permutation) {
     int n = permutation.size();
     vector<int> inverted(n);
     for (int i = 0; i < n; i++) {
@@ -421,7 +431,7 @@ vector<int> inverse(vector<int> permutation) {
 }
 
 #ifndef SIMULATION
-VectorXf send_to_annealer(SparseMatrix<float> theta) {
+VectorXf send_to_annealer(const SparseMatrix<float> &theta) {
     int n = theta.outerSize();
     char r[100];
     char c[100];
@@ -470,7 +480,7 @@ double min(double lambda0, int i, int e) {
     return lambda_first;
 }
 
-VectorXf min_energy(SparseMatrix<float> theta, int mode) {
+VectorXf min_energy(const SparseMatrix<float> &theta, int mode) {
     int n = theta.outerSize();
     unsigned long long N = pow(2, n);  // Overflow with n > 64, not a problem since is a simulation
     VectorXf x_min(n);
@@ -494,7 +504,7 @@ VectorXf min_energy(SparseMatrix<float> theta, int mode) {
     return x_min;
 }
 
-double E(SparseMatrix<float> theta, VectorXf x) {
+double E(const SparseMatrix<float> &theta, VectorXf x) {
     double e = 0;
     int r, c;
     for (int i = 0; i < theta.outerSize(); i++) {
@@ -520,7 +530,7 @@ void increment(VectorXf &v, int mode) {  // O(1) per l'analisi ammortizzata
     if (i < n) v(i) = 1;
 }
 
-VectorXf map_back(VectorXf z, vector<int> perm) {
+VectorXf map_back(const VectorXf &z, const vector<int> &perm) {
     int n = perm.size();
     vector<int> inverted = inverse(perm);
     VectorXf z_ret(n);
@@ -537,7 +547,7 @@ double simulated_annealing(double f_first, double f_star, double p) {
     return exp(-(f_first - f_star) / T);
 }
 
-bool comp_vectors(VectorXf z1, VectorXf z2) {
+bool comp_vectors(const VectorXf &z1, const VectorXf &z2) {
     for (int i = 0; i < z1.size(); i++) {
         if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
     }
@@ -554,7 +564,7 @@ void close_child() {
 }
 
 #ifdef SIMULATION
-double compute_Q(MatrixXf Q, int mode) {
+double compute_Q(const MatrixXf &Q, int mode) {
     int n = Q.outerSize();
     VectorXf x_min(n);
     VectorXf x(n);
@@ -577,7 +587,7 @@ double compute_Q(MatrixXf Q, int mode) {
     return min;
 }
 
-void log(VectorXf z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
+void log(const VectorXf &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i) {
     cout << "---Current status at " << i << "th iteration---" << endl
          << "f*=" << f_star << "\tz*=" << z_star.transpose() << endl
          << "To reach: min=" << min << "\tf_gold=" << f_gold << endl

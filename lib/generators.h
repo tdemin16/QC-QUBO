@@ -3,7 +3,16 @@
 
 #include "lib.h"
 
-int number_partitioning_problem(MatrixXf &Q, string file = "../test/npp16.txt");
-void quadratic_assignment(MatrixXf &Q, string file);
+class NPP {
+   public:
+    static float number_partitioning_problem(MatrixXf &Q, string file);
+    static float diff(const MatrixXf &Q, const VectorXf &x, float c);
+};
+
+class QAP {
+   public:
+    static float quadratic_assignment(MatrixXf &Q, string file);
+    static float y(const MatrixXf &Q, const VectorXf &x, float penalty);
+};
 
 #endif
