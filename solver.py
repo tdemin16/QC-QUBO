@@ -19,7 +19,7 @@ def run_annealer(theta, sampler):
     response = sampler.sample_qubo(theta, num_reads=4)
     
     # Samples are orderes from lowest energy to highest -> fist sample has lowest energy
-    response = sampler.first.sample 
+    response = response.first.sample 
 
     return response
 
@@ -45,22 +45,18 @@ def chimera(n):
     return list(zip(rows, cols))
 
 # Given n number of nodes, generates a pegasus graph of n nodes
-# If simulation = 0, then return a graph with only active qbits
 def pegasus(n):
-    G = dnx.pegasus_graph(16, fabric_only=False)
-    tmp = nx.to_dict_of_lists(G)
+    G = dnx.pegasus_graph(16)
+    tmp = nx.to_numpy_matrix(G)
+    
     rows = []
     cols = []
-
+           
     for i in range(n):
-        
-        # Append the diagonal
         rows.append(i)
         cols.append(i)
-
-        # Append each edge within the predefined range
-        for j in tmp[i]:
-            if (j < n):
+        for j in range(n):
+            if(tmp.item(i,j)):
                 rows.append(i)
                 cols.append(j)
 
@@ -96,7 +92,7 @@ def main():
     simulation = sys.stdin.read(2)                   # Read type of run from stdin (could be a simulation or not)
     simulation = int(simulation.split('\x00', 1)[0]) # Decode the type of run
     
-    A = pegasus(n) # Generate a chimera graph given a a dimension n
+    A = pegasus(n) # Generate a pegasus graph given a a dimension n
 
     '''
     Foreach couple of rows and columns
