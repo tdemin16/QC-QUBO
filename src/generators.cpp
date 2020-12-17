@@ -1,25 +1,24 @@
 #include "../lib/generators.h"
 
-float NPP::number_partitioning_problem(MatrixXf &Q, string file) {
-    vector<double> nums;
-    long long n;
-    float c = 0;
-    int prod;
-    ifstream in;
-
-    in.open(file);
-    if (in.fail()) {
-        cout << "File doesn't exist" << endl;
+float NPP::number_partitioning_problem(MatrixXf &Q, vector<int> &nums, int range) {
+    if (range < 1) {
+        cout << "Range must be >= 1" << endl;
         exit(1);
     }
 
-    in >> n;
-    nums.reserve(n);
-    Q.resize(n, n);
+    int n = nums.size();
+    mt19937_64 e_uniform;
+    uniform_int_distribution<long> d_int_uniform(1, range);
+    random_device rd;
+    seed_seq seed{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    float c = 0;
+    int prod;
 
-    for (long long i = 0; i < n; i++) {
-        in >> nums[i];
-        c += nums[i];
+    Q.resize(n, n);
+    e_uniform.seed(seed);
+
+    for (int i = 0; i < n; i++) {
+        c += nums[i] = d_int_uniform(e_uniform);
     }
 
     for (long long i = 0; i < n; i++) {
@@ -37,8 +36,23 @@ float NPP::number_partitioning_problem(MatrixXf &Q, string file) {
     return c;
 }
 
-float NPP::diff(const MatrixXf &Q, const VectorXf &x, float c){
+float NPP::diff(const MatrixXf &Q, const VectorXf &x, float c) {
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
+}
+
+void NPP::to_file(chrono::duration<double> difference, int n, int range, float diff, const VectorXf &x) {
+    pid_t pid = getpid();
+    ofstream of;
+    of.open("../out/" + to_string(pid) + ".txt");
+
+    of << difference.count() << "s" << endl
+       << "DIM=" << n << endl
+       << "RANGE=[1, " << range << "]" << endl
+       << "DIFF=" << diff << endl
+       << "Solution vector:" << endl
+       << x.transpose();
+
+    of.close();
 }
 
 float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
@@ -46,7 +60,7 @@ float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
     long long N;
     float pen;
     float std_dev = 0;
-    float mean;
+    float mean = 0;
     long long count = 0;
     ifstream in;
 
@@ -76,7 +90,19 @@ float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
 
     Q = kroneckerProduct(f, d);
 
-    mean = Q.mean();
+    for (long long i = 0; i < N; i++) {
+        for (long long j = i + 1; j < N; j++) {
+            if (Q(i, j) != 0) {
+                mean += Q(i, j);
+                count++;
+            }
+        }
+    }
+
+    mean /= count;
+    mean *= 2;
+
+    count = 0;
     for (long long i = 0; i < N; i++) {
         for (long long j = i + 1; j < N; j++) {
             if (Q(i, j) != 0) {
@@ -86,8 +112,11 @@ float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
         }
     }
 
-    std_dev /= count - 1;
-    pen = (Q.maxCoeff() + sqrt(std_dev)) * 2;
+    std_dev /= count;
+    std_dev = sqrt(std_dev);
+
+    pen = (2 * Q.maxCoeff() + std_dev);
+    cout << pen << endl;
 
     long long k;
     for (long long i = 0; i < N; i++) {
