@@ -40,12 +40,12 @@ extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXf solve(MatrixXf Q, int max_it=1000, int mode=BINARY, bool logs=true);
+VectorXf solve(MatrixXf Q, int max_it=1000, int mode=BINARY, int k=4, bool logs=true);
 
 void handle_sigint(int sig);
 
 // change process code with python solver.py
-void init_child(int mode);
+void init_child(int mode, int k);
 
 // init seed in order to generate random numbers
 void init_seeds();

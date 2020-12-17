@@ -14,9 +14,9 @@ def handler(signum, frame):
     exit(0)
 
 # Given a theta dictionary and a sampler, computes the global minimum
-def run_annealer(theta, sampler):
+def run_annealer(theta, sampler, k):
     # Run the annealer 4 times with theta matrix
-    response = sampler.sample_qubo(theta, num_reads=4)
+    response = sampler.sample_qubo(theta, num_reads=k)
     
     # Samples are orderes from lowest energy to highest -> fist sample has lowest energy
     response = response.first.sample 
@@ -84,6 +84,7 @@ def main():
     signal.signal(signal.SIGINT, handler) # Add signal handling
     
     mode = sys.argv[1]                    # Read mode from argv
+    k = sys.argv[2]
     
     n = sys.stdin.read(10)                # Read problem's dimension from stdin (pipe)
     n = int(n.split('\x00', 1)[0])        # Decode the dimension
@@ -140,7 +141,7 @@ def main():
 
             elif(x[0] == "#"):  # if '#' is received, compute the minimum
                 i = 0
-                l = run_annealer(theta, sampler) # run the annealer with theta and sampler
+                l = run_annealer(theta, sampler, k) # run the annealer with theta and sampler
 
                 send_msg(l, mode) # Send the result
 

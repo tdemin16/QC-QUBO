@@ -11,7 +11,7 @@ uniform_int_distribution<unsigned long long> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
-VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
+VectorXf solve(MatrixXf Q, int max_it, int mode, int k, bool logs) {
     //Init
     int n = Q.outerSize();
 
@@ -20,12 +20,12 @@ VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
         exit(1);
     }
 
-    #ifdef SIMULATION
-    if(n > 64) {
+#ifdef SIMULATION
+    if (n > 64) {
         cout << "[Warning] problem's dimensions are too big for a classical computation" << endl;
         exit(1);
     }
-    #endif
+#endif
 
     /*---------------------------
         fd[READ] child read
@@ -44,7 +44,7 @@ VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
     child_pid = fork();
 
     if (child_pid == 0) {
-        init_child(mode);
+        init_child(mode, k);
     } else if (child_pid == -1) {
         cout << "[FORK ERROR - CLOSING]" << endl;
         exit(4);
@@ -58,7 +58,6 @@ VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
     double eta = 0.01f;     // probability decreasing rate η > 0
     double q = 0.1f;        // candidate perturbation probability q > 0
     double lambda0 = 1.0f;  // initial balancing factor λ0 > 0
-    int k = 1;              // number of annealer runs k ≥ 1
     int N = 20;             // Decreasing time
 
     //Termination Parameters
@@ -246,17 +245,21 @@ VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
     return z_gold;
 }
 
-void init_child(int mode) {
+void init_child(int mode, int k) {
     char first[20];
     char second[16];
     char third[3];
+    char fourth[30];
     memset(first, '\0', sizeof(char) * 20);
     memset(second, '\0', sizeof(char) * 16);
     memset(third, '\0', sizeof(char) * 3);
+    memset(fourth, '\0', sizeof(char) * 30);
     sprintf(first, "python3");
     sprintf(second, "../solver.py");
     sprintf(third, "%d", mode);
-    char *args[] = {first, second, third, NULL};
+    sprintf(fourth, "%d", k);
+
+    char *args[] = {first, second, third, fourth, NULL};
 
     dup2(fd[READ], STDIN_FILENO);        // Change child's stdin
     dup2(fd[WRITE + 2], STDOUT_FILENO);  // Change child's stdout
