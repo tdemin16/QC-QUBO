@@ -78,7 +78,7 @@ float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
 
     mean = Q.mean();
     for (long long i = 0; i < N; i++) {
-        for (long long j = 0; j < N; j++) {
+        for (long long j = i + 1; j < N; j++) {
             if (Q(i, j) != 0) {
                 std_dev += pow(Q(i, j) - mean, 2);
                 count++;
@@ -88,6 +88,7 @@ float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
 
     std_dev /= count - 1;
     pen = (Q.maxCoeff() + sqrt(std_dev)) * 2;
+    cout << pen << endl;
 
     long long k;
     for (long long i = 0; i < N; i++) {

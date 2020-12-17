@@ -13,9 +13,9 @@ Use solve() to compute a QUBO problem
 
 int main() {
     MatrixXf Q;
-    float c = NPP::number_partitioning_problem(Q, "../test/npp16.txt");
-    VectorXf x = solve(Q, 1000, BINARY, 5, true);
-    cout << NPP::diff(Q, x, c) << endl;
+    float c = QAP::quadratic_assignment_problem(Q, "../test/qap3.txt");
+    VectorXf x = solve(Q, 10, BINARY, 5, true);
+    cout << QAP::y(Q, x, c) << endl;
 
     return 0;
 }
