@@ -58,7 +58,7 @@ VectorXf solve(MatrixXf Q, int max_it, int mode, bool logs) {
     double eta = 0.01f;     // probability decreasing rate η > 0
     double q = 0.1f;        // candidate perturbation probability q > 0
     double lambda0 = 1.0f;  // initial balancing factor λ0 > 0
-    int k = 1;              // number of annealer runs k ≥ 1
+    int k = 4;              // number of annealer runs k ≥ 1
     int N = 20;             // Decreasing time
 
     //Termination Parameters
