@@ -88,7 +88,6 @@ float QAP::quadratic_assignment_problem(MatrixXf &Q, string file) {
 
     std_dev /= count - 1;
     pen = (Q.maxCoeff() + sqrt(std_dev)) * 2;
-    cout << pen << endl;
 
     long long k;
     for (long long i = 0; i < N; i++) {
