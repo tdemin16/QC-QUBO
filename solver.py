@@ -56,7 +56,7 @@ def pegasus(n):
         rows.append(i)
         cols.append(i)
         for j in range(n):
-            if(tmp.item(i,j)):
+            if tmp.item(i,j):
                 rows.append(i)
                 cols.append(j)
 
