@@ -2,7 +2,15 @@ import dimod
 import hybrid
 import numpy as np
 
-def run_annealer(theta, workflow):
+def run_annealer(theta):
+    iteration = hybrid.RacingBranches(
+            hybrid.InterruptableTabuSampler(),
+            hybrid.EnergyImpactDecomposer(size=1)
+            | hybrid.QPUSubproblemAutoEmbeddingSampler()
+            | hybrid.SplatComposer()
+        ) | hybrid.ArgMin()
+    workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
+
     bqm = dimod.BinaryQuadraticModel({}, theta, 0, dimod.BINARY)
 
     init_state = hybrid.State.from_problem(bqm)
@@ -35,17 +43,8 @@ def fQ(theta, sol):
     return sol.transpose() * theta * sol
             
 
-iteration = hybrid.RacingBranches(
-            hybrid.InterruptableTabuSampler(),
-            hybrid.EnergyImpactDecomposer(size=1)
-            | hybrid.QPUSubproblemAutoEmbeddingSampler()
-            | hybrid.SplatComposer()
-        ) | hybrid.ArgMin()
-
-workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
-
 nums = [3, 7, 4, 10, 4, 2, 10, 1, 7, 3]
 theta = to_matrix(nums)
 
-sol = run_annealer(matrix_to_dict(theta), iteration, workflow)
+sol = run_annealer(matrix_to_dict(theta))
 print(fQ(theta, sol))
