@@ -57,7 +57,7 @@ QAP::y
 #define N 10      // Problem dimension
 #define IT 1000   // Algorithm iteration
 #define K 5       // Annealer's run
-#define LOG true  // Log true/false
+#define LOG false  // Log true/false
 
 int main() {
     // Start timer

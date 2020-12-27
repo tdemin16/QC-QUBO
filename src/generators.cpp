@@ -54,7 +54,7 @@ void NPP::to_file(chrono::duration<double> difference, int n, int range, float d
        << "Number sequence:" << endl;
        
     for(auto it : nums) {
-        of << to_string(it) << " ";
+        of << to_string(it) << ", ";
     }
 
     of.close();

@@ -1,0 +1,8 @@
+2.86297s
+DIM=10
+RANGE=[1, 10]
+DIFF=60
+Solution vector:
+0 0 1 0 0 0 0 0 0 0
+Number sequence:
+9 10 6 7 3 1 9 8 9 10 

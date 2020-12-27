@@ -1,0 +1,8 @@
+6.47458s
+DIM=10
+RANGE=[1, 10]
+DIFF=1
+Solution vector:
+1 0 0 1 0 1 1 0 0 0
+Number sequence:
+3 7 4 10 4 2 10 1 7 3 
