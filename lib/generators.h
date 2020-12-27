@@ -8,7 +8,7 @@ class NPP {
     //Input: Matrix Q, empty vector of dimension n that will contain the vector, range max of number gen
     static float number_partitioning_problem(MatrixXf &Q, vector<int> &nums, int range);
     static float diff(const MatrixXf &Q, const VectorXf &x, float c);
-    static void to_file(chrono::duration<double> difference, int n, int range, float diff, const VectorXf &x, const vector<int> nums);
+    static void to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums);
 };
 
 class QAP {

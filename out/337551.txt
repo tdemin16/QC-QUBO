@@ -1,8 +1,0 @@
-6.85862s
-DIM=10
-RANGE=[1, 10]
-DIFF=1
-Solution vector:
-0 0 0 1 0 1 0 1 1 0
-Number sequence:
-7, 4, 1, 8, 5, 3, 1, 6, 9, 9, 

@@ -40,20 +40,22 @@ float NPP::diff(const MatrixXf &Q, const VectorXf &x, float c) {
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
 }
 
-void NPP::to_file(chrono::duration<double> difference, int n, int range, float diff, const VectorXf &x, const vector<int> nums) {
-    pid_t pid = getpid();
+void NPP::to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums) {
+    pid_t pid = time(0);
     ofstream of;
     of.open("../out/" + to_string(pid) + ".txt");
 
     of << difference.count() << "s" << endl
+       << "imax=" << it << endl
+       << "f=" << f << endl
        << "DIM=" << n << endl
        << "RANGE=[1, " << range << "]" << endl
        << "DIFF=" << diff << endl
        << "Solution vector:" << endl
        << x.transpose() << endl
        << "Number sequence:" << endl;
-       
-    for(auto it : nums) {
+
+    for (auto it : nums) {
         of << to_string(it) << ", ";
     }
 

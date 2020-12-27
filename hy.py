@@ -1,6 +1,7 @@
 import dimod
 import hybrid
 import numpy as np
+import time
 
 def run_annealer(theta):
     iteration = hybrid.RacingBranches(
@@ -15,9 +16,9 @@ def run_annealer(theta):
 
     init_state = hybrid.State.from_problem(bqm)
     final_state = workflow.run(init_state).result()
-    response = final_state.samples.first.sample
+    response = final_state.samples.first.sample.values()
 
-    return np.atleast_2d(list(response.first.sample.values())).T
+    return np.atleast_2d(list(response)).T
 
 def to_matrix(nums):
     theta = [[0 for col in range(len(nums))] for row in range(len(nums))]
@@ -40,11 +41,15 @@ def matrix_to_dict(theta):
     return d
 
 def fQ(theta, sol):
-    return sol.transpose() * theta * sol
+    return ((np.atleast_2d(sol).T).dot(theta)).dot(sol)
             
 
 nums = [3, 7, 4, 10, 4, 2, 10, 1, 7, 3]
 theta = to_matrix(nums)
 
+start = time.time()
 sol = run_annealer(matrix_to_dict(theta))
+end = time.time()
+
+print(str(end - start) + "s")
 print(fQ(theta, sol))

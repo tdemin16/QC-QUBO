@@ -53,10 +53,10 @@ QAP::y
     penalty
 */
 
-#define RANGE 10  // Will generate numbers in [1, RANGE]
-#define N 10      // Problem dimension
-#define IT 1000   // Algorithm iteration
-#define K 5       // Annealer's run
+#define RANGE 10   // Will generate numbers in [1, RANGE]
+#define N 10       // Problem dimension
+#define IT 1000    // Algorithm iteration
+#define K 5        // Annealer's run
 #define LOG false  // Log true/false
 
 int main() {
@@ -74,7 +74,7 @@ int main() {
 
     cout << difference.count() << endl;
 
-    NPP::to_file(difference, N, RANGE, diff, x, nums);
+    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums);
 
     return 0;
 }
