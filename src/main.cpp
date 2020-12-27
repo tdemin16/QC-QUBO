@@ -57,7 +57,7 @@ QAP::y
 #define N 10      // Problem dimension
 #define IT 1000   // Algorithm iteration
 #define K 5       // Annealer's run
-#define LOG 1     // Log true/false
+#define LOG true  // Log true/false
 
 int main() {
     // Start timer
@@ -74,7 +74,7 @@ int main() {
 
     cout << difference.count() << endl;
 
-    NPP::to_file(difference, N, RANGE, diff, x);
+    NPP::to_file(difference, N, RANGE, diff, x, nums);
 
     return 0;
 }
