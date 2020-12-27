@@ -84,7 +84,7 @@ def main():
     signal.signal(signal.SIGINT, handler) # Add signal handling
     
     mode = sys.argv[1]                    # Read mode from argv
-    k = sys.argv[2]
+    k = int(sys.argv[2])
     
     n = sys.stdin.read(10)                # Read problem's dimension from stdin (pipe)
     n = int(n.split('\x00', 1)[0])        # Decode the dimension
