@@ -4,29 +4,13 @@ from dwave.system.samplers import LeapHybridSampler
 import numpy as np
 import time
 
-def run_annealer(theta):
-    iteration = hybrid.RacingBranches(
-                hybrid.InterruptableTabuSampler(),
-                hybrid.EnergyImpactDecomposer(size=1)
-                | hybrid.QPUSubproblemAutoEmbeddingSampler()
-                | hybrid.SplatComposer()
-              ) | hybrid.ArgMin()
-    workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
-
-    bqm = dimod.BinaryQuadraticModel({}, theta, 0, dimod.BINARY)
-
-    init_state = hybrid.State.from_problem(bqm)
-    final_state = workflow.run(init_state).result()
-    response = final_state.samples.first.sample.values()
-
-    return np.atleast_2d(list(response)).T
 
 def run_annealer_hybrid(theta):
     sampler = LeapHybridSampler()
     response = sampler.sample_qubo(theta)
-    response = response.first.sample
+    response = response.first.sample.values()
 
-    return reponse
+    return np.atleast_2d(list(response)).T
 
 def to_matrix(nums):
     theta = [[0 for col in range(len(nums))] for row in range(len(nums))]
