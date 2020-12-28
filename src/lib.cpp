@@ -11,7 +11,7 @@ uniform_int_distribution<unsigned long long> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
-VectorXf solve(MatrixXf Q, int max_it, int mode, int k, bool logs) {
+VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     //Init
     int n = Q.outerSize();
 
@@ -61,9 +61,8 @@ VectorXf solve(MatrixXf Q, int max_it, int mode, int k, bool logs) {
     int N = 20;             // Decreasing time
 
     //Termination Parameters
-    int imax = max_it;  // Max number of iteration
-    int Nmax = 50;      // Max number of solution equal to the best one + solution worse than the best one
-    int dmin = 30;      // Number of solution that are worse than the best beyond which the best solution is not valid anymore
+    int Nmax = 100;      // Max number of solution equal to the best one + solution worse than the best one
+    int dmin = 70;      // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
     MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
