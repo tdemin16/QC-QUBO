@@ -118,9 +118,10 @@ def main():
 
     if(simulation == 0): # If this run must use the annealer then
         
-        # Sampler init, done nly one time to seve seconds foreach iteration
+        # Sampler init, done only one time to seve seconds foreach iteration
         sampler = DWaveSampler()
-        sampler = EmbeddingComposite(sampler)
+        active = sampler.nodelist
+
         theta = {}
         i = 0
 
@@ -130,9 +131,9 @@ def main():
             if(x[0] != "#" and x[0:3] != "END"):  # retrieving problem from pipe
                 x = x.split('\x00', 1)[0]
                 if i == 0:
-                    r = int(x) # row
+                    r = active[int(x)] # row
                 elif i == 1:
-                    c = int(x) # column
+                    c = active[int(x)] # column
                 else:
                     theta[(r, c)] = float(x) # val
                     pass

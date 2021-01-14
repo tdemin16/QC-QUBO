@@ -1,0 +1,10 @@
+7.87972s
+imax=1000
+f=-702
+DIM=10
+RANGE=[1, 10]
+DIFF=1
+Solution vector:
+1 0 1 0 0 0 1 1 0 1
+Number sequence:
+6, 3, 9, 8, 8, 4, 2, 3, 3, 7, 
