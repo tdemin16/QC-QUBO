@@ -120,7 +120,10 @@ def main():
         
         # Sampler init, done only one time to seve seconds foreach iteration
         sampler = DWaveSampler()
-        active = sampler.nodelist
+        active_nodes = sampler.nodelist
+        active_edges = set()
+        for edge in sampler.edgelist:
+            active_edges.add(edge)
 
         theta = {}
         i = 0
@@ -131,11 +134,12 @@ def main():
             if(x[0] != "#" and x[0:3] != "END"):  # retrieving problem from pipe
                 x = x.split('\x00', 1)[0]
                 if i == 0:
-                    r = active[int(x)] # row
+                    r = active_nodes[int(x)] # row
                 elif i == 1:
-                    c = active[int(x)] # column
+                    c = active_nodes[int(x)] # column
                 else:
-                    theta[(r, c)] = float(x) # val
+                    if (r, c) in active_edges or r == c:
+                        theta[(r, c)] = float(x) # val
                     pass
 
                 i = (i + 1) % 3
