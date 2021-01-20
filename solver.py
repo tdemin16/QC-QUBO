@@ -46,21 +46,19 @@ def chimera(n):
 
 # Given n number of nodes, generates a pegasus graph of n nodes
 def pegasus(n):
-    G = dnx.pegasus_graph(16)
+    G = dnx.pegasus_graph(16, fabric_only=False)
     tmp = nx.to_numpy_matrix(G)
     
-    rows = []
-    cols = []
+    graph = []
            
     for i in range(n):
-        rows.append(i)
-        cols.append(i)
+        graph.append((i, i))
+
         for j in range(n):
             if tmp.item(i,j):
-                rows.append(i)
-                cols.append(j)
+                graph.append((i, j))
 
-    return list(zip(rows, cols))
+    return graph
 
 # Given a list l and a bool value mode, send l back to C++
 def send_msg(l, mode):
@@ -80,6 +78,43 @@ def send_msg(l, mode):
             os.write(1, msg)
 
 
+def send_topology(n, simulation):
+    len_n = len(str(n))
+
+    if (simulation != 0):
+        active_nodes = [i for i in range(n)]
+        active_edges = pegasus(n) # Generate a pegasus graph given a a dimension n
+    else:
+        sampler = DWaveSampler()
+        active_nodes = sampler.nodelist
+        active_edges = set()
+        for edge in sampler.edgelist:
+            active_edges.add(edge)
+
+    # send active nodes
+    for node in active_nodes:
+        msg = str(node)
+        msg = ('0' * (len_n - len(msg)) + msg).encode() 
+        os.write(1, msg)
+        pass
+
+    # send active edges
+    for r, c in active_edges:
+        msg = str(r)
+        msg = ('0' * (len_n - len(msg)) + msg).encode() 
+        os.write(1, msg)
+
+        msg = str(c)
+        msg = ('0' * (len_n - len(msg)) + msg).encode()
+        os.write(1, msg)
+        pass       
+
+    # End of transmission
+    msg = ("#" * len_n).encode()
+    os.write(1, msg)
+    os.write(1, msg)
+
+
 def main():
     signal.signal(signal.SIGINT, handler) # Add signal handling
     
@@ -93,27 +128,9 @@ def main():
     simulation = sys.stdin.read(2)                   # Read type of run from stdin (could be a simulation or not)
     simulation = int(simulation.split('\x00', 1)[0]) # Decode the type of run
     
-    A = pegasus(n) # Generate a pegasus graph given a a dimension n
-
-    '''
-    Foreach couple of rows and columns
-        Send row
-        Send column
-    '''
-    for r, c in A:
-        msg = str(r)
-        msg = ('0' * (len_n - len(msg)) + msg).encode() 
-        os.write(1, msg)
-
-        msg = str(c)
-        msg = ('0' * (len_n - len(msg)) + msg).encode()
-        os.write(1, msg)
-        pass
-
-    # End of transmission
-    msg = ("#" * len_n).encode()
-    os.write(1, msg)
-    os.write(1, msg)
+    
+    # Send pegasus topology to C++
+    send_topology(n, simulation)
 
 
     if(simulation == 0): # If this run must use the annealer then
