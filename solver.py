@@ -19,7 +19,7 @@ def run_annealer(theta, sampler, k):
     response = sampler.sample_qubo(theta, num_reads=k)
     
     # Samples are orderes from lowest energy to highest -> fist sample has lowest energy
-    response = response.first.sample 
+    response = response.first.sample.values()
 
     return response
 
