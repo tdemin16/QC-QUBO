@@ -67,16 +67,16 @@ def send_msg(l, mode):
     if mode == -1: # if mode == SPIN
                    # Each message contains +/- followed by 1: "+1", "-1", "+1", "+1" 
         for j in range(len(l)):
-            if(l[j] == 1):
-                msg = ("+" + str(l[j])).encode()
+            if(j == 1):
+                msg = ("+" + str(j)).encode()
             else:
-                l[j] = 1
-                msg = ("-" + str(l[j])).encode()
+                j = 1
+                msg = ("-" + str(j)).encode()
             os.write(1, msg)  # write solution on pipe
             pass
     else: # if mode == BINARY
-        for j in range(len(l)):
-            msg = (" " + str(l[j])).encode() # Space added to have a msg of dim = 2: " 1", " 0", " 1"...
+        for j in l:
+            msg = (" " + str(j)).encode() # Space added to have a msg of dim = 2: " 1", " 0", " 1"...
             os.write(1, msg)
 
 
