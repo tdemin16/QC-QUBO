@@ -51,7 +51,9 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     }
 
     init_seeds();
-    SparseMatrix<float> A = init_A(n);  //Chimera topology
+    SparseMatrix<float> edges;
+    vector<int> nodes(n);
+    get_topology(nodes, edges);  //Chimera topology
 
     //Input
     double pmin = 0.2f;     // minimum probability 0 < pδ < 0.5 of permutation modification
@@ -61,8 +63,8 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     int N = 20;             // Decreasing time
 
     //Termination Parameters
-    int Nmax = 100;      // Max number of solution equal to the best one + solution worse than the best one
-    int dmin = 70;      // Number of solution that are worse than the best beyond which the best solution is not valid anymore
+    int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
+    int dmin = 70;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
     MatrixXf In(n, n);  //Identity matrix
     In.setIdentity();
@@ -71,10 +73,11 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     cout << "Q" << endl
          << Q << endl
          << endl;
-    cout << "A" << endl
-         << A << endl
+    cout << "edges" << endl
+         << edges << endl
          << endl;
 #endif
+    exit(0);
 
     //Algorithm
     MatrixXf Q_first(n, n);
@@ -100,9 +103,9 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
         perm2[i] = i;
     }
 
-    // Hadamard product between a permuted Q and A
-    theta1 = g_strong(Q, A, perm1, perm1, p);
-    theta2 = g_strong(Q, A, perm2, perm2, p);
+    // Hadamard product between a permuted Q and edges
+    theta1 = g_strong(Q, edges, perm1, perm1, p);
+    theta2 = g_strong(Q, edges, perm2, perm2, p);
 
 #ifdef SIMULATION
     cout << "Computing min of Q" << endl;
@@ -163,7 +166,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
         if (!(i % N))
             p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
-        theta_first = g_strong(Q_first, A, perm, perm_star, p);
+        theta_first = g_strong(Q_first, edges, perm, perm_star, p);
 #ifdef SIMULATION
         z_first = map_back(min_energy(theta_first, mode), perm);
 #else
@@ -292,13 +295,14 @@ void init_seeds() {
     e_uniform_vector.seed(seed_vector);
 }
 
-SparseMatrix<float> init_A(int n) {
+void get_topology(vector<int> &nodes, SparseMatrix<float> &edges) {
 // sim tells python if it's a simulation or not
 #ifdef SIMULATION
     int sim = 1;
 #else
     int sim = 0;
 #endif
+    int n = nodes.size();
     char n_nodes[10];
     char simulation[2];
     int r;
@@ -307,7 +311,6 @@ SparseMatrix<float> init_A(int n) {
     char i[len_n + 1];
     char j[len_n + 1];
     bool end = false;
-    SparseMatrix<float> A(n, n);
     vector<Triplet<float>> t;
 
     memset(n_nodes, '\0', sizeof(char) * 10);
@@ -321,6 +324,12 @@ SparseMatrix<float> init_A(int n) {
     write(fd[WRITE], n_nodes, 10);    // Send number of nodes in the problem
     write(fd[WRITE], simulation, 2);  // Send if it's a simulation or not
 
+    for (int k = 0; k < n; k++) {
+        read(fd[READ + 2], i, len_n);
+        nodes[k] = atoi(i);
+    }
+    edges.resize(nodes[n - 1] + 1, nodes[n - 1] + 1);
+
     do {
         read(fd[READ + 2], i, len_n);  // Read i index
         read(fd[READ + 2], j, len_n);  // Read j index
@@ -333,8 +342,7 @@ SparseMatrix<float> init_A(int n) {
             end = true;  // if "####" is recived then the matrix is totally sended
     } while (!end);
 
-    A.setFromTriplets(t.begin(), t.end());
-    return A;
+    edges.setFromTriplets(t.begin(), t.end());
 }
 
 float fQ(MatrixXf Q, VectorXf x) {

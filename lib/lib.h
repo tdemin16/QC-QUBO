@@ -51,8 +51,8 @@ void init_child(int mode, int k);
 void init_seeds();
 
 // Input: number of nodes
-// Return: a SparseMatrix A containing CHimera's topology
-SparseMatrix<float> init_A(int n);
+// Return: a SparseMatrix A containing Chimera's topology
+void get_topology(vector<int> &nodes, SparseMatrix<float> &edges);
 
 // Input: Matrix of order n Q, Vector of n integers z
 // Return: z^T * Q * z

@@ -90,7 +90,7 @@ def send_topology(n, simulation):
         active_edges = set()
         for edge in sampler.edgelist:
             active_edges.add(edge)
-
+    
     # send active nodes
     for node in active_nodes:
         msg = str(node)
@@ -123,12 +123,11 @@ def main():
     
     n = sys.stdin.read(10)                # Read problem's dimension from stdin (pipe)
     n = int(n.split('\x00', 1)[0])        # Decode the dimension
-    len_n = len(str(n))
     
     simulation = sys.stdin.read(2)                   # Read type of run from stdin (could be a simulation or not)
     simulation = int(simulation.split('\x00', 1)[0]) # Decode the type of run
     
-    
+
     # Send pegasus topology to C++
     send_topology(n, simulation)
 
