@@ -86,10 +86,11 @@ def send_topology(n, simulation):
         active_edges = pegasus(n) # Generate a pegasus graph given a a dimension n
     else:
         sampler = DWaveSampler()
-        active_nodes = sampler.nodelist
+        active_nodes = sampler.nodelist[:n]
         active_edges = set()
         for edge in sampler.edgelist:
-            active_edges.add(edge)
+            if edge[0] <= active_nodes[-1] and edge[1] <= active_nodes[-1]: 
+                active_edges.add(edge)
     
     # send active nodes
     for node in active_nodes:
