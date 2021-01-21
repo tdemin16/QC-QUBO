@@ -51,9 +51,9 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     }
 
     init_seeds();
+    unordered_map<int, int> nodes;
     SparseMatrix<float> edges;
-    vector<int> nodes(n);
-    get_topology(nodes, edges);  //Chimera topology
+    get_topology(nodes, edges, n);  // Pegasus topology
 
     //Input
     double pmin = 0.2f;     // minimum probability 0 < pδ < 0.5 of permutation modification
@@ -77,7 +77,6 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
          << edges << endl
          << endl;
 #endif
-    exit(0);
 
     //Algorithm
     MatrixXf Q_first(n, n);
@@ -104,8 +103,8 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     }
 
     // Hadamard product between a permuted Q and edges
-    theta1 = g_strong(Q, edges, perm1, perm1, p);
-    theta2 = g_strong(Q, edges, perm2, perm2, p);
+    theta1 = g_strong(Q, nodes, edges, perm1, perm1, p);
+    theta2 = g_strong(Q, nodes, edges, perm2, perm2, p);
 
 #ifdef SIMULATION
     cout << "Computing min of Q" << endl;
@@ -166,7 +165,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
         if (!(i % N))
             p = p - (p - pmin) * eta;  // 0 mod N va considerato come 0?
 
-        theta_first = g_strong(Q_first, edges, perm, perm_star, p);
+        theta_first = g_strong(Q_first, nodes, edges, perm, perm_star, p);
 #ifdef SIMULATION
         z_first = map_back(min_energy(theta_first, mode), perm);
 #else
@@ -295,14 +294,14 @@ void init_seeds() {
     e_uniform_vector.seed(seed_vector);
 }
 
-void get_topology(vector<int> &nodes, SparseMatrix<float> &edges) {
+void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, int n) {
 // sim tells python if it's a simulation or not
 #ifdef SIMULATION
     int sim = 1;
 #else
     int sim = 0;
 #endif
-    int n = nodes.size();
+    int k;
     char n_nodes[10];
     char simulation[2];
     int r;
@@ -324,11 +323,11 @@ void get_topology(vector<int> &nodes, SparseMatrix<float> &edges) {
     write(fd[WRITE], n_nodes, 10);    // Send number of nodes in the problem
     write(fd[WRITE], simulation, 2);  // Send if it's a simulation or not
 
-    for (int k = 0; k < n; k++) {
+    for (k = 0; k < n; k++) {
         read(fd[READ + 2], i, len_n);
-        nodes[k] = atoi(i);
+        nodes.insert(pair<int, int>(k, atoi(i)));
     }
-    edges.resize(nodes[n - 1] + 1, nodes[n - 1] + 1);
+    edges.resize(nodes.at(k - 1) + 1, nodes.at(k - 1) + 1);
 
     do {
         read(fd[READ + 2], i, len_n);  // Read i index
@@ -349,7 +348,7 @@ float fQ(MatrixXf Q, VectorXf x) {
     return x.transpose() * Q * x;
 }
 
-SparseMatrix<float> g_strong(const MatrixXf &Q, const SparseMatrix<float> &A, vector<int> &permutation, const vector<int> &old_permutation, double pr) {
+SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &nodes, const SparseMatrix<float> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr) {
     int n = Q.outerSize();
     map<int, int> m;
     SparseMatrix<float> theta(n, n);
@@ -371,11 +370,16 @@ SparseMatrix<float> g_strong(const MatrixXf &Q, const SparseMatrix<float> &A, ve
     permutation = fill(m, old_permutation);  // Generates a vector of permuted + non permuted indexes
     inversed = inverse(permutation);         // Inversed is used to know which pair row column is to be used to calculate the product Q ○ A
 
-    for (int i = 0; i < A.outerSize(); i++) {
-        for (SparseMatrix<float>::InnerIterator it(A, i); it; ++it) {
+    unordered_map<int, int> swapped;
+    for (auto it = nodes.begin(); it != nodes.end(); it++) {
+        swapped.insert(pair<int, int>(it->second, it->first));
+    }
+
+    for (int i = 0; i < edges.outerSize(); i++) {
+        for (SparseMatrix<float>::InnerIterator it(edges, i); it; ++it) {
             r = it.row();
             c = it.col();
-            val = Q(inversed[r], inversed[c]);
+            val = Q(swapped.at(inversed[r]), swapped.at(inversed[c]));
             t.push_back(Triplet<float>(r, c, val));
         }
     }

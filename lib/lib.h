@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <random>
 #include <string>
 #include <fstream>
@@ -52,7 +53,7 @@ void init_seeds();
 
 // Input: number of nodes
 // Return: a SparseMatrix A containing Chimera's topology
-void get_topology(vector<int> &nodes, SparseMatrix<float> &edges);
+void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, int n);
 
 // Input: Matrix of order n Q, Vector of n integers z
 // Return: z^T * Q * z
@@ -60,7 +61,7 @@ float fQ(MatrixXf Q, VectorXf x);
 
 // Input: Matrix Q, SparseMatrix A, vector in which store the new permutation, vector from which generate the new permutation, probability of permutation
 // Return: Matrix theta containing the product P^T * Q * P ○ A. permutation will contain the new permutation of indexes. Complexity O(nlogn)
-SparseMatrix<float> g_strong(const MatrixXf &Q, const SparseMatrix<float> &A, vector<int> &permutation, const vector<int> &old_permutation, double pr);
+SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &nodes, const SparseMatrix<float> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr);
 
 // Input: Map of n integer m
 // Shuffle the matrix
