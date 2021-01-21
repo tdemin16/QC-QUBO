@@ -78,22 +78,8 @@ def send_msg(l, mode):
             os.write(1, msg)
 
 
-def send_topology(n, simulation):
+def send_topology(active_nodes, active_edges, n):
     len_n = len(str(n))
-
-    if (simulation != 0):
-        active_nodes = [i for i in range(n)]
-        active_edges = pegasus(n) # Generate a pegasus graph given a a dimension n
-    else:
-        sampler = DWaveSampler()
-        active_nodes = sampler.nodelist[:n]
-        active_edges = []
-        for edge in sampler.edgelist:
-            if edge[0] <= active_nodes[-1] and edge[1] <= active_nodes[-1]: 
-                active_edges.append(edge)
-        
-        for node in active_nodes:
-            active_edges.append((node, node))
     
     # send active nodes
     for node in active_nodes:
@@ -132,18 +118,25 @@ def main():
     simulation = int(simulation.split('\x00', 1)[0]) # Decode the type of run
     
 
+    if (simulation != 0):
+        active_nodes = [i for i in range(n)]
+        active_edges = pegasus(n) # Generate a pegasus graph given a a dimension n
+    else:
+        sampler = DWaveSampler()
+        active_nodes = sampler.nodelist[:n]
+        active_edges = []
+        for edge in sampler.edgelist:
+            if edge[0] <= active_nodes[-1] and edge[1] <= active_nodes[-1]: 
+                active_edges.append(edge)
+        
+        for node in active_nodes:
+            active_edges.append((node, node))
+
     # Send pegasus topology to C++
-    send_topology(n, simulation)
+    send_topology(active_nodes, active_edges, n)
 
 
     if(simulation == 0): # If this run must use the annealer then
-        
-        # Sampler init, done only one time to seve seconds foreach iteration
-        sampler = DWaveSampler()
-        active_nodes = sampler.nodelist
-        active_edges = set()
-        for edge in sampler.edgelist:
-            active_edges.add(edge)
 
         theta = {}
         i = 0
@@ -154,12 +147,11 @@ def main():
             if(x[0] != "#" and x[0:3] != "END"):  # retrieving problem from pipe
                 x = x.split('\x00', 1)[0]
                 if i == 0:
-                    r = active_nodes[int(x)] # row
+                    r = int(x) # row
                 elif i == 1:
-                    c = active_nodes[int(x)] # column
+                    c = int(x) # column
                 else:
-                    if (r, c) in active_edges or r == c:
-                        theta[(r, c)] = float(x) # val
+                    theta[(r, c)] = float(x) # val
                     pass
 
                 i = (i + 1) % 3
