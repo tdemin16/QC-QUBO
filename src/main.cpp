@@ -55,8 +55,8 @@ QAP::y
 
 #define RANGE 10  // Will generate numbers in [1, RANGE]
 #define N 10      // Problem dimension
-#define IT 1000   // Algorithm iteration
-#define K 5       // Annealer's run
+#define IT 1   // Algorithm iteration
+#define K 1       // Annealer's run
 #define LOG true  // Log true/false
 
 int main() {

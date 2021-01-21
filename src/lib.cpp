@@ -117,10 +117,10 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     z2 = map_back(min_energy(theta2, mode), perm2);
 #else
     cout << "Computing z1" << endl;
-    z1 = map_back(send_to_annealer(theta1), perm1);
+    z1 = map_back(send_to_annealer(theta1, n), perm1);
 
     cout << "Computing z2" << endl;
-    z2 = map_back(send_to_annealer(theta2), perm2);
+    z2 = map_back(send_to_annealer(theta2, n), perm2);
 #endif
 
     f1 = fQ(Q, z1);
@@ -169,7 +169,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
 #ifdef SIMULATION
         z_first = map_back(min_energy(theta_first, mode), perm);
 #else
-        z_first = map_back(send_to_annealer(theta_first), perm);
+        z_first = map_back(send_to_annealer(theta_first, n), perm);
 #endif
         if (d_real_uniform(e_uniform_pert) <= q) {
             h(z_first, p, mode);  // possibly perturb the candidate
@@ -446,8 +446,7 @@ vector<int> inverse(const vector<int> &permutation) {
 }
 
 #ifndef SIMULATION
-VectorXf send_to_annealer(const SparseMatrix<float> &theta) {
-    int n = theta.outerSize();
+VectorXf send_to_annealer(const SparseMatrix<float> &theta, int n) {
     char r[100];
     char c[100];
     char val[100];

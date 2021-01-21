@@ -82,7 +82,7 @@ vector<int> inverse(const vector<int> &permutation);
 #ifndef SIMULATION
 // Input: Theta matrix
 // Output: z that minimize theta function
-VectorXf send_to_annealer(const SparseMatrix<float> &theta);
+VectorXf send_to_annealer(const SparseMatrix<float> &theta, int n);
 #endif
 
 // Input: Vector of n integers z, probability pr
