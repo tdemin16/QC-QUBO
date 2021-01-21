@@ -311,6 +311,7 @@ void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, in
     char j[len_n + 1];
     bool end = false;
     vector<Triplet<float>> t;
+    unordered_map<int, int> swapped;
 
     memset(n_nodes, '\0', sizeof(char) * 10);
     memset(simulation, '\0', sizeof(char) * 2);
@@ -328,6 +329,11 @@ void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, in
         nodes.insert(pair<int, int>(k, atoi(i)));
     }
     edges.resize(nodes.at(k - 1) + 1, nodes.at(k - 1) + 1);
+
+    for (auto it = nodes.begin(); it != nodes.end(); it++) {
+        swapped.insert(pair<int, int>(it->second, it->first));
+    }
+    nodes = swapped;
 
     do {
         read(fd[READ + 2], i, len_n);  // Read i index
@@ -370,16 +376,11 @@ SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &n
     permutation = fill(m, old_permutation);  // Generates a vector of permuted + non permuted indexes
     inversed = inverse(permutation);         // Inversed is used to know which pair row column is to be used to calculate the product Q ○ A
 
-    unordered_map<int, int> swapped;
-    for (auto it = nodes.begin(); it != nodes.end(); it++) {
-        swapped.insert(pair<int, int>(it->second, it->first));
-    }
-
     for (int i = 0; i < edges.outerSize(); i++) {
         for (SparseMatrix<float>::InnerIterator it(edges, i); it; ++it) {
             r = it.row();
             c = it.col();
-            val = Q(swapped.at(inversed[r]), swapped.at(inversed[c]));
+            val = Q(nodes.at(inversed[r]), nodes.at(inversed[c]));
             t.push_back(Triplet<float>(r, c, val));
         }
     }
