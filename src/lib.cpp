@@ -188,7 +188,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
                 S = S + kroneckerProduct(z_first, z_first.transpose()) - In + z_diag;
             } else {
                 d++;
-                if (d_real_uniform(e_uniform_ann) <= simulated_annealing(f_first, f_star, p)) {
+                if (d_real_uniform(e_uniform_ann) <= pow(p - pmin, f_first - f_star)) {
                     swap(z_first, z_star);
                     f_star = f_first;
                     perm_star = perm;

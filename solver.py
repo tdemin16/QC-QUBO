@@ -127,7 +127,8 @@ def main():
         active_edges = []
         for edge in sampler.edgelist:
             if edge[0] <= active_nodes[-1] and edge[1] <= active_nodes[-1]: 
-                active_edges.append(edge)
+                active_edges.append((edge[0], edge[1]))
+                active_edges.append((edge[1], edge[0]))
         
         for node in active_nodes:
             active_edges.append((node, node))
