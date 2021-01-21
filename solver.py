@@ -87,10 +87,13 @@ def send_topology(n, simulation):
     else:
         sampler = DWaveSampler()
         active_nodes = sampler.nodelist[:n]
-        active_edges = set()
+        active_edges = []
         for edge in sampler.edgelist:
             if edge[0] <= active_nodes[-1] and edge[1] <= active_nodes[-1]: 
-                active_edges.add(edge)
+                active_edges.append(edge)
+        
+        for node in active_nodes:
+            active_edges.append((node, node))
     
     # send active nodes
     for node in active_nodes:
