@@ -357,7 +357,7 @@ float fQ(MatrixXf Q, VectorXf x) {
 SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &nodes, const SparseMatrix<float> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr) {
     int n = Q.outerSize();
     map<int, int> m;
-    SparseMatrix<float> theta(n, n);
+    SparseMatrix<float> theta(edges.outerSize(), edges.outerSize());
     vector<int> inversed(n);
     vector<Triplet<float>> t;
     t.reserve(11 * n);  // A = (V, E) => |t| = |E| + |V|
@@ -380,7 +380,7 @@ SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &n
         for (SparseMatrix<float>::InnerIterator it(edges, i); it; ++it) {
             r = it.row();
             c = it.col();
-            val = Q(nodes.at(inversed[r]), nodes.at(inversed[c]));
+            val = Q(inversed[nodes.at(r)], inversed[nodes.at(c)]);
             t.push_back(Triplet<float>(r, c, val));
         }
     }
