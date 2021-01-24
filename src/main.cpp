@@ -55,7 +55,7 @@ QAP::y
 
 #define RANGE 10  // Will generate numbers in [1, RANGE]
 #define N 10      // Problem dimension
-#define IT 1   // Algorithm iteration
+#define IT 10   // Algorithm iteration
 #define K 1       // Annealer's run
 #define LOG true  // Log true/false
 
@@ -74,7 +74,7 @@ int main() {
 
     cout << difference.count() << endl;
 
-    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums);
+    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums, Q);
 
     return 0;
 }

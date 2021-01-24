@@ -118,9 +118,9 @@ void close_child();
 
 #ifdef SIMULATION
 double compute_Q(const MatrixXf &Q, int mode);
-void log(const VectorXf &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
+void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #else
-void log(double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i);
+void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #endif
 
 #endif  //LIB_H
