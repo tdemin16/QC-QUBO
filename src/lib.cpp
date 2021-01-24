@@ -306,7 +306,7 @@ void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, in
     char simulation[2];
     int r;
     int c;
-    int len_n = (to_string(n)).length();
+    int len_n = (to_string(n)).length() + 5;
     char i[len_n + 1];
     char j[len_n + 1];
     bool end = false;

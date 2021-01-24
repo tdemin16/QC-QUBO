@@ -79,7 +79,7 @@ def send_msg(l, mode):
 
 
 def send_topology(active_nodes, active_edges, n):
-    len_n = len(str(n))
+    len_n = len(str(n)) + 5
     
     # send active nodes
     for node in active_nodes:
