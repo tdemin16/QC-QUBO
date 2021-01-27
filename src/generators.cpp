@@ -40,7 +40,7 @@ float NPP::diff(const MatrixXf &Q, const VectorXf &x, float c) {
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
 }
 
-void NPP::to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums, const MatrixXf &Q) {
+void NPP::to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums) {
     long unsigned len = 0;
     pid_t pid = time(0);
     ofstream of;
@@ -61,7 +61,6 @@ void NPP::to_file(chrono::duration<double> difference, int it, float f, int n, i
         of << to_string(it);
         if(len < nums.size()) of << ", ";
     }
-    of << endl << Q;
 
     of.close();
 }

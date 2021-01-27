@@ -120,7 +120,7 @@ void close_child();
 double compute_Q(const MatrixXf &Q, int mode);
 void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #else
-void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
+void log(const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #endif
 
 #endif  //LIB_H

@@ -95,6 +95,13 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
     string filename = "../out/tmp-" + to_string(time(0)) + ".txt";
+    string problem = "../out/prob-" + to_string(time(0)) + ".txt";
+    ofstream out_file;
+    
+    out_file.open(problem);
+    out_file << Q;
+    out_file.close();
+
 
     // Initialization of perm vectors like an identity matrix of order n
     for (int i = 0; i < n; i++) {
@@ -212,7 +219,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
 #ifdef SIMULATION
         if (logs) log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, filename);
 #else
-        if (logs) log(Q, z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, filename);
+        if (logs) log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, filename);
 #endif
         end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
@@ -623,7 +630,7 @@ void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double min, d
     out_file.close();
 }
 #else
-void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
+void log(const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
     ofstream out_file;
     stringstream ss;
     string out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
@@ -634,9 +641,6 @@ void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double f_gold
     cout << out;
 
     ss << z_star.transpose();
-    out += "\n" + ss.str();
-    ss.str("");
-    ss << Q;
     out += "\n" + ss.str();
     out_file.open(filename);
     out_file << out;
