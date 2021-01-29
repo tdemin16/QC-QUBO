@@ -41,7 +41,7 @@ extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXf solve(MatrixXf Q, int imax=1000, int mode=BINARY, int k=4, bool logs=true);
+VectorXf solve(MatrixXf Q, int imax=1000, int mode=BINARY, int k=4, bool logs=true, string filename = to_string(time(0)));
 
 void handle_sigint(int sig);
 

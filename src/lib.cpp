@@ -11,7 +11,7 @@ uniform_int_distribution<unsigned long long> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
-VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
+VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename) {
     //Init
     int n = Q.outerSize();
 
@@ -94,8 +94,8 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     bool simul_ann;
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
-    string filename = "../out/tmp-" + to_string(time(0)) + ".txt";
-    string problem = "../out/prob-" + to_string(time(0)) + ".txt";
+    string log_file = "../out/tmp-" + filename + ".txt";
+    string problem = "../out/prob-" + filename + ".txt";
     ofstream out_file;
     
     out_file.open(problem);
@@ -217,9 +217,9 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
         }
 
 #ifdef SIMULATION
-        if (logs) log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, filename);
+        if (logs) log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, log_file);
 #else
-        if (logs) log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, filename);
+        if (logs) log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, log_file);
 #endif
         end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
@@ -240,7 +240,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs) {
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
     
-    remove(filename.c_str());
+    remove(log_file.c_str());
 
     if (logs) {
         printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);

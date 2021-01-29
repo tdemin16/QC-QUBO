@@ -40,11 +40,10 @@ float NPP::diff(const MatrixXf &Q, const VectorXf &x, float c) {
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
 }
 
-void NPP::to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums) {
+void NPP::to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums, string filename) {
     long unsigned len = 0;
-    pid_t pid = time(0);
     ofstream of;
-    of.open("../out/" + to_string(pid) + ".txt");
+    of.open("../out/" + filename + ".txt");
 
     of << difference.count() << "s" << endl
        << "imax=" << it << endl

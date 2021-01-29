@@ -54,19 +54,20 @@ QAP::y
 */
 
 #define RANGE 10  // Will generate numbers in [1, RANGE]
-#define N 5000      // Problem dimension
+#define N 10      // Problem dimension
 #define IT 1   // Algorithm iteration
 #define K 3       // Annealer's run
 #define LOG true  // Log true/false
 
 int main() {
+    string filename = to_string(time(0));
     // Start timer
     auto start = chrono::steady_clock::now();
 
     MatrixXf Q;                                                  // This will contain the QUBO problem
     vector<int> nums(N);                                         // vector used to generate npp
     float c = NPP::number_partitioning_problem(Q, nums, RANGE);  // npp generation
-    VectorXf x = solve(Q, IT, BINARY, K, LOG);                   // Compute solution
+    VectorXf x = solve(Q, IT, BINARY, K, LOG, filename);                   // Compute solution
     float diff = NPP::diff(Q, x, c);                             // map back the solution
 
     auto end = chrono::steady_clock::now();  // end timer
@@ -74,7 +75,7 @@ int main() {
 
     cout << difference.count() << endl;
 
-    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums);
+    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums, filename);
 
     return 0;
 }
