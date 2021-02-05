@@ -1,7 +1,6 @@
 import time
 import math
 from dwave.system.samplers import DWaveSampler
-#from neal import SimulatedAnnealingSampler
 from dwave.system.composites import EmbeddingComposite
 
 
@@ -19,21 +18,16 @@ def dec(num):
     return dec_value
 
 def rand():
-    useQpu = True
     f = open("nums.txt", "a")
-
-    if(useQpu):
-        sampler = DWaveSampler()
-        sampler = EmbeddingComposite(sampler)
-    else:
-        sampler = SimulatedAnnealingSampler()
+    sampler = DWaveSampler()
 
     bqm = {}
 
-    bits = 5000
+    bits = 5436
+    nodes = sampler.nodelist
 
     for i in range(0, bits):
-        bqm[(i, i)] = 0
+        bqm[(nodes[i], nodes[i])] = 0
         pass
 
     start = time.time()
