@@ -56,11 +56,11 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
     get_topology(nodes, edges, n);  // Pegasus topology
 
     //Input
-    double pmin = 0.2f;     // minimum probability 0 < pδ < 0.5 of permutation modification
-    double eta = 0.01f;     // probability decreasing rate η > 0
-    double q = 0.1f;        // candidate perturbation probability q > 0
-    double lambda0 = 1.0f;  // initial balancing factor λ0 > 0
-    int N = 20;             // Decreasing time
+    double pmin = 0.1;       // minimum probability 0 < pδ < 0.5 of permutation modification
+    double eta = 0.01f;      // probability decreasing rate η > 0
+    double q = 0.2f;         // candidate perturbation probability q > 0
+    double lambda0 = 3 / 2;  // initial balancing factor λ0 > 0
+    int N = 10;              // Decreasing time
 
     //Termination Parameters
     int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
@@ -97,11 +97,10 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
     string log_file = "../out/tmp-" + filename + ".txt";
     string problem = "../out/prob-" + filename + ".txt";
     ofstream out_file;
-    
+
     out_file.open(problem);
     out_file << Q;
     out_file.close();
-
 
     // Initialization of perm vectors like an identity matrix of order n
     for (int i = 0; i < n; i++) {
@@ -239,7 +238,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
     close(fd[WRITE]);
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
-    
+
     remove(log_file.c_str());
 
     if (logs) {
