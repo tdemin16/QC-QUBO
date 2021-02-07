@@ -251,6 +251,13 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
              << "f_gold: " << f_gold << endl
              << endl;
     }
+#ifdef SIMULATION
+    if (f_gold == minimum) {
+        cout << "minimum reached" << endl;
+    } else{
+        cout << "minimum not reached" << endl;
+    }
+#endif
 
     return z_gold;
 }
