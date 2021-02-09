@@ -8,8 +8,8 @@ class NPP {
    public:
     //Input: Matrix Q, empty vector of dimension n that will contain the vector, range max of number gen
     static long long number_partitioning_problem(MatrixXd &Q, vector<int> &nums, int range);
-    static double diff(const MatrixXd &Q, const VectorXd &x, long long c);
-    static void to_file(chrono::duration<double> difference, int it, double f, int n, int range, double diff, const VectorXd &x, const vector<int> nums, string filename);
+    static long long diff(const MatrixXd &Q, const VectorXd &x, long long c);
+    static void to_file(chrono::duration<double> difference, int it, double f, int n, int range, long long diff, const VectorXd &x, const vector<int> nums, string filename);
 };
 
 class QAP {

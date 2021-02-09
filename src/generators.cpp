@@ -36,11 +36,11 @@ long long NPP::number_partitioning_problem(MatrixXd &Q, vector<int> &nums, int r
     return c;
 }
 
-double NPP::diff(const MatrixXd &Q, const VectorXd &x, long long c) {
+long long NPP::diff(const MatrixXd &Q, const VectorXd &x, long long c) {
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
 }
 
-void NPP::to_file(chrono::duration<double> difference, int it, double f, int n, int range, double diff, const VectorXd &x, const vector<int> nums, string filename) {
+void NPP::to_file(chrono::duration<double> difference, int it, double f, int n, int range, long long diff, const VectorXd &x, const vector<int> nums, string filename) {
     long unsigned len = 0;
     ofstream of;
     of.open("../out/" + filename + ".txt");
