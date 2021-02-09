@@ -41,7 +41,7 @@ extern uniform_int_distribution<unsigned long long> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXf solve(MatrixXf Q, int imax=1000, int mode=BINARY, int k=4, bool logs=true, string filename = to_string(time(0)));
+VectorXd solve(MatrixXd Q, int imax=1000, int mode=BINARY, int k=4, bool logs=true, string filename = to_string(time(0)));
 
 void handle_sigint(int sig);
 
@@ -53,15 +53,15 @@ void init_seeds();
 
 // Input: number of nodes
 // Return: a SparseMatrix A containing Chimera's topology
-void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, int n);
+void get_topology(unordered_map<int, int> &nodes, SparseMatrix<double> &edges, int n);
 
 // Input: Matrix of order n Q, Vector of n integers z
 // Return: z^T * Q * z
-float fQ(MatrixXf Q, VectorXf x);
+double fQ(MatrixXd Q, VectorXd x);
 
 // Input: Matrix Q, SparseMatrix A, vector in which store the new permutation, vector from which generate the new permutation, probability of permutation
 // Return: Matrix theta containing the product P^T * Q * P ○ A. permutation will contain the new permutation of indexes. Complexity O(nlogn)
-SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &nodes, const SparseMatrix<float> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr);
+SparseMatrix<double> g_strong(const MatrixXd &Q, const unordered_map<int, int> &nodes, const SparseMatrix<double> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr);
 
 // Input: Map of n integer m
 // Shuffle the matrix
@@ -82,45 +82,45 @@ vector<int> inverse(const vector<int> &permutation);
 #ifndef SIMULATION
 // Input: Theta matrix
 // Output: z that minimize theta function
-VectorXf send_to_annealer(const SparseMatrix<float> &theta, int n);
+VectorXd send_to_annealer(const SparseMatrix<double> &theta, int n);
 #endif
 
 // Input: Vector of n integers z, probability pr
 // With probability pr, the element zi = -zi
-void h(VectorXf &z, double pr, int mode);
+void h(VectorXd &z, double pr, int mode);
 
 // Input: λ0, i, e
 // Return: Minimum between λ0 and λ0/(2+i-e)
 double min(double lambda0, int i, int e);
 
 // Input: weight theta
-// Return: VectorXf that minimize the weight function
-VectorXf min_energy(const SparseMatrix<float> &theta, int mode);
+// Return: VectorXd that minimize the weight function
+VectorXd min_energy(const SparseMatrix<double> &theta, int mode);
 
-// Input: weight function theta, VectorXf x = {-1, 1}^n
+// Input: weight function theta, VectorXd x = {-1, 1}^n
 // Return: E(theta, x)
-double E(const SparseMatrix<float> &theta, VectorXf x);
+double E(const SparseMatrix<double> &theta, VectorXd x);
 
-// Input: VectorXf of {-1, 1}^n v
+// Input: VectorXd of {-1, 1}^n v
 // Treats the vector as a binary number but made of -1 and 1(instead of 0 and 1). Performs the increment
-void increment(VectorXf &v, int mode);
+void increment(VectorXd &v, int mode);
 
-VectorXf map_back(const VectorXf &z, const vector<int> &perm);
+VectorXd map_back(const VectorXd &z, const vector<int> &perm);
 
 // Returns the probabilty of commuting
 double simulated_annealing(double, double, double);
 
-// Input: 2 VectorXf
+// Input: 2 VectorXd
 // Return: true iff they are equal, false otherwise
-bool comp_vectors(const VectorXf &z1, const VectorXf &z2);
+bool comp_vectors(const VectorXd &z1, const VectorXd &z2);
 
 void close_child();
 
 #ifdef SIMULATION
-double compute_Q(const MatrixXf &Q, int mode);
-void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
+double compute_Q(const MatrixXd &Q, int mode);
+void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #else
-void log(const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
+void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #endif
 
 #endif  //LIB_H

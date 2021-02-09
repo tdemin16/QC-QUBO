@@ -2,19 +2,20 @@
 #define GENERATORS_H
 
 #include "lib.h"
+#include "limits.h"
 
 class NPP {
    public:
     //Input: Matrix Q, empty vector of dimension n that will contain the vector, range max of number gen
-    static float number_partitioning_problem(MatrixXf &Q, vector<int> &nums, int range);
-    static float diff(const MatrixXf &Q, const VectorXf &x, float c);
-    static void to_file(chrono::duration<double> difference, int it, float f, int n, int range, float diff, const VectorXf &x, const vector<int> nums, string filename);
+    static long long number_partitioning_problem(MatrixXd &Q, vector<int> &nums, int range);
+    static double diff(const MatrixXd &Q, const VectorXd &x, long long c);
+    static void to_file(chrono::duration<double> difference, int it, double f, int n, int range, double diff, const VectorXd &x, const vector<int> nums, string filename);
 };
 
 class QAP {
    public:
-    static float quadratic_assignment_problem(MatrixXf &Q, string file);
-    static float y(const MatrixXf &Q, const VectorXf &x, float penalty);
+    static double quadratic_assignment_problem(MatrixXd &Q, double &max_coeff, float lambda, string file);
+    static double y(const MatrixXd &Q, const VectorXd &x, double penalty);
 };
 
 #endif

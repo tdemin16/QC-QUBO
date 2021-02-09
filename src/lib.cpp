@@ -11,7 +11,7 @@ uniform_int_distribution<unsigned long long> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
-VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename) {
+VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename) {
     //Init
     int n = Q.outerSize();
 
@@ -52,7 +52,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
 
     init_seeds();
     unordered_map<int, int> nodes;
-    SparseMatrix<float> edges;
+    SparseMatrix<double> edges;
     get_topology(nodes, edges, n);  // Pegasus topology
 
     //Input
@@ -66,7 +66,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
     int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
     int dmin = 70;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
-    MatrixXf In(n, n);  //Identity matrix
+    MatrixXd In(n, n);  //Identity matrix
     In.setIdentity();
 
 #ifdef SIMULATION
@@ -79,11 +79,11 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
 #endif
 
     //Algorithm
-    MatrixXf Q_first(n, n);
-    SparseMatrix<float> theta1(n, n), theta2(n, n), theta_first(n, n);
-    VectorXf z_star(n), z_first(n), z1(n), z2(n), z_gold(n);
-    MatrixXf z_diag(n, n);
-    MatrixXf S(n, n);  //Tabu Matrix
+    MatrixXd Q_first(n, n);
+    SparseMatrix<double> theta1(n, n), theta2(n, n), theta_first(n, n);
+    VectorXd z_star(n), z_first(n), z1(n), z2(n), z_gold(n);
+    MatrixXd z_diag(n, n);
+    MatrixXd S(n, n);  //Tabu Matrix
     vector<int> perm(n), perm_star(n), perm1(n), perm2(n);
     double f1, f2, f_star, f_first, f_gold;
     double p = 1;             // probability of an element to be considered for shuffling
@@ -156,7 +156,7 @@ VectorXf solve(MatrixXf Q, int imax, int mode, int k, bool logs, string filename
         z_diag = z_first.asDiagonal();     // Matrix where the diagonal is made by elemnt of z_first
         S = kroneckerProduct(z_first, z_first.transpose()) - In + z_diag;
     } else {
-        S = MatrixXf::Zero(n, n);
+        S = MatrixXd::Zero(n, n);
     }
 
     int i = 1;
@@ -310,7 +310,7 @@ void init_seeds() {
     e_uniform_vector.seed(seed_vector);
 }
 
-void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, int n) {
+void get_topology(unordered_map<int, int> &nodes, SparseMatrix<double> &edges, int n) {
 // sim tells python if it's a simulation or not
 #ifdef SIMULATION
     int sim = 1;
@@ -326,7 +326,7 @@ void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, in
     char i[len_n + 1];
     char j[len_n + 1];
     bool end = false;
-    vector<Triplet<float>> t;
+    vector<Triplet<double>> t;
     unordered_map<int, int> swapped;
 
     memset(n_nodes, '\0', sizeof(char) * 10);
@@ -358,7 +358,7 @@ void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, in
         if (strncmp(i, "#", 1) != 0 && strncmp(j, "#", 1) != 0) {
             r = atoi(i);  // Set r as i index if i is not equal to "####"
             c = atoi(j);  // Set c as j index if j is not equal to "####"
-            t.push_back(Triplet<float>(r, c, 1.0f));
+            t.push_back(Triplet<double>(r, c, 1.0f));
         } else
             end = true;  // if "####" is recived then the matrix is totally sended
     } while (!end);
@@ -366,16 +366,16 @@ void get_topology(unordered_map<int, int> &nodes, SparseMatrix<float> &edges, in
     edges.setFromTriplets(t.begin(), t.end());
 }
 
-float fQ(MatrixXf Q, VectorXf x) {
+double fQ(MatrixXd Q, VectorXd x) {
     return x.transpose() * Q * x;
 }
 
-SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &nodes, const SparseMatrix<float> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr) {
+SparseMatrix<double> g_strong(const MatrixXd &Q, const unordered_map<int, int> &nodes, const SparseMatrix<double> &edges, vector<int> &permutation, const vector<int> &old_permutation, double pr) {
     int n = Q.outerSize();
     map<int, int> m;
-    SparseMatrix<float> theta(edges.outerSize(), edges.outerSize());
+    SparseMatrix<double> theta(edges.outerSize(), edges.outerSize());
     vector<int> inversed(n);
-    vector<Triplet<float>> t;
+    vector<Triplet<double>> t;
     t.reserve(11 * n);  // A = (V, E) => |t| = |E| + |V|
     int r, c;
     double val;
@@ -393,11 +393,11 @@ SparseMatrix<float> g_strong(const MatrixXf &Q, const unordered_map<int, int> &n
     inversed = inverse(permutation);         // Inversed is used to know which pair row column is to be used to calculate the product Q ○ A
 
     for (int i = 0; i < edges.outerSize(); i++) {
-        for (SparseMatrix<float>::InnerIterator it(edges, i); it; ++it) {
+        for (SparseMatrix<double>::InnerIterator it(edges, i); it; ++it) {
             r = it.row();
             c = it.col();
             val = Q(inversed[nodes.at(r)], inversed[nodes.at(c)]);
-            t.push_back(Triplet<float>(r, c, val));
+            t.push_back(Triplet<double>(r, c, val));
         }
     }
     theta.setFromTriplets(t.begin(), t.end());
@@ -462,19 +462,19 @@ vector<int> inverse(const vector<int> &permutation) {
 }
 
 #ifndef SIMULATION
-VectorXf send_to_annealer(const SparseMatrix<float> &theta, int n) {
+VectorXd send_to_annealer(const SparseMatrix<double> &theta, int n) {
     char r[100];
     char c[100];
     char val[100];
     char ret[3];
-    VectorXf z(n);
+    VectorXd z(n);
 
     memset(r, '\0', sizeof(char) * 100);
     memset(c, '\0', sizeof(char) * 100);
     memset(val, '\0', sizeof(char) * 100);  // to be adjusted, could be too small
 
     for (int i = 0; i < theta.outerSize(); i++) {
-        for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
+        for (SparseMatrix<double>::InnerIterator it(theta, i); it; ++it) {
             sprintf(r, "%ld", it.row());
             sprintf(c, "%ld", it.col());
             sprintf(val, "%lf", it.value());
@@ -495,7 +495,7 @@ VectorXf send_to_annealer(const SparseMatrix<float> &theta, int n) {
 }
 #endif
 
-void h(VectorXf &z, double pr, int mode) {
+void h(VectorXd &z, double pr, int mode) {
     int n = z.size();
 
     for (int i = 0; i < n; i++) {
@@ -510,11 +510,11 @@ double min(double lambda0, int i, int e) {
     return lambda_first;
 }
 
-VectorXf min_energy(const SparseMatrix<float> &theta, int mode) {
+VectorXd min_energy(const SparseMatrix<double> &theta, int mode) {
     int n = theta.outerSize();
     unsigned long long N = pow(2, n);  // Overflow with n > 64, not a problem since is a simulation
-    VectorXf x_min(n);
-    VectorXf x(n);
+    VectorXd x_min(n);
+    VectorXd x(n);
     double min;
     double e;
     for (int i = 0; i < n; i++) x(i) = mode;
@@ -534,11 +534,11 @@ VectorXf min_energy(const SparseMatrix<float> &theta, int mode) {
     return x_min;
 }
 
-double E(const SparseMatrix<float> &theta, VectorXf x) {
+double E(const SparseMatrix<double> &theta, VectorXd x) {
     double e = 0;
     int r, c;
     for (int i = 0; i < theta.outerSize(); i++) {
-        for (SparseMatrix<float>::InnerIterator it(theta, i); it; ++it) {
+        for (SparseMatrix<double>::InnerIterator it(theta, i); it; ++it) {
             r = it.row();
             c = it.col();
             if (r == c)
@@ -550,7 +550,7 @@ double E(const SparseMatrix<float> &theta, VectorXf x) {
     return e;
 }
 
-void increment(VectorXf &v, int mode) {  // O(1) per l'analisi ammortizzata
+void increment(VectorXd &v, int mode) {  // O(1) per l'analisi ammortizzata
     int n = v.size();
     int i = 0;
     while (i < n && v(i) == 1) {
@@ -560,10 +560,10 @@ void increment(VectorXf &v, int mode) {  // O(1) per l'analisi ammortizzata
     if (i < n) v(i) = 1;
 }
 
-VectorXf map_back(const VectorXf &z, const vector<int> &perm) {
+VectorXd map_back(const VectorXd &z, const vector<int> &perm) {
     int n = perm.size();
     vector<int> inverted = inverse(perm);
-    VectorXf z_ret(n);
+    VectorXd z_ret(n);
 
     for (int i = 0; i < n; i++) {
         z_ret(i) = z(inverted[i]);
@@ -577,7 +577,7 @@ double simulated_annealing(double f_first, double f_star, double p) {
     return exp(-(f_first - f_star) / T);
 }
 
-bool comp_vectors(const VectorXf &z1, const VectorXf &z2) {
+bool comp_vectors(const VectorXd &z1, const VectorXd &z2) {
     for (int i = 0; i < z1.size(); i++) {
         if (abs(z1(i) - z2(i)) > __FLT_EPSILON__) return false;
     }
@@ -594,10 +594,10 @@ void close_child() {
 }
 
 #ifdef SIMULATION
-double compute_Q(const MatrixXf &Q, int mode) {
+double compute_Q(const MatrixXd &Q, int mode) {
     int n = Q.outerSize();
-    VectorXf x_min(n);
-    VectorXf x(n);
+    VectorXd x_min(n);
+    VectorXd x(n);
     unsigned long long N = pow(2, n);
     double min, e;
     for (int i = 0; i < n; i++) x(i) = mode;
@@ -617,7 +617,7 @@ double compute_Q(const MatrixXf &Q, int mode) {
     return min;
 }
 
-void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
+void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
     ofstream out_file;
     stringstream ss;
     ss << z_star.transpose();
@@ -636,7 +636,7 @@ void log(const MatrixXf &Q, const VectorXf &z_star, double f_star, double min, d
     out_file.close();
 }
 #else
-void log(const VectorXf &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
+void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
     ofstream out_file;
     stringstream ss;
     string out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
