@@ -240,6 +240,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     close(fd[WRITE + 2]);
 
     remove(log_file.c_str());
+    remove(problem.c_str());
 
     if (logs) {
         printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
