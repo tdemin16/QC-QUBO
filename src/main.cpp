@@ -53,10 +53,8 @@ QAP::y
     penalty
 */
 
-#define RANGE 10  // Will generate numbers in [1, RANGE]
-#define N 16      // Problem dimension
-#define IT 500   // Algorithm iteration
-#define K 3       // Annealer's run
+#define IT 1   // Algorithm iteration
+#define K 10       // Annealer's run
 #define LOG true  // Log true/false
 
 int main() {
@@ -64,18 +62,20 @@ int main() {
     // Start timer
     auto start = chrono::steady_clock::now();
 
-    MatrixXf Q;                                                  // This will contain the QUBO problem
-    vector<int> nums(N);                                         // vector used to generate npp
-    float c = NPP::number_partitioning_problem(Q, nums, RANGE);  // npp generation
-    VectorXf x = solve(Q, IT, BINARY, K, LOG, filename);                   // Compute solution
-    float diff = NPP::diff(Q, x, c);                             // map back the solution
+    MatrixXd Q;                                                  // This will contain the QUBO problem
+    double max_coeff;
+    float lambda = 2.25;
+    string file = "../test/qap12.txt";
+    double pen = QAP::quadratic_assignment_problem(Q, max_coeff, lambda, file);
+    VectorXd x = solve(Q, IT, BINARY, K, LOG, filename);                   // Compute solution
+    double y = QAP::y(Q, x, pen);
 
     auto end = chrono::steady_clock::now();  // end timer
     chrono::duration<double> difference = end - start;
 
     cout << difference.count() << endl;
 
-    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums, filename);
+    QAP::to_file(difference, IT, K, lambda, pen, fQ(Q, x), file, y, x, filename);
 
     return 0;
 }
