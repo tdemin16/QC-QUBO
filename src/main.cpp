@@ -54,7 +54,7 @@ QAP::y
 */
 
 #define IT 1   // Algorithm iteration
-#define K 10       // Annealer's run
+#define K 5       // Annealer's run
 #define LOG true  // Log true/false
 
 int main() {
@@ -62,17 +62,17 @@ int main() {
     // Start timer
     auto start = chrono::steady_clock::now();
 
-    MatrixXd Q;                                                  // This will contain the QUBO problem
+    MatrixXd Q; // This will contain the QUBO problem
     double max_coeff;
     float lambda = 2.25;
     //C.E. Nugent, T.E. Vollmann and J. Ruml
     //Y. Li and P.M. Pardalos
     string file = "../test/nug16a.txt";
     double pen = QAP::quadratic_assignment_problem(Q, max_coeff, lambda, file);
-    VectorXd x = solve(Q, IT, BINARY, K, LOG, filename);                   // Compute solution
+    VectorXd x = solve(Q, IT, BINARY, K, LOG, filename); // Compute solution
     double y = QAP::y(Q, x, pen);
 
-    auto end = chrono::steady_clock::now();  // end timer
+    auto end = chrono::steady_clock::now(); // end timer
     chrono::duration<double> difference = end - start;
 
     cout << difference.count() << endl;
