@@ -53,7 +53,7 @@ QAP::y
     penalty
 */
 
-#define IT 1   // Algorithm iteration
+#define IT 2000   // Algorithm iteration
 #define K 5       // Annealer's run
 #define LOG true  // Log true/false
 
