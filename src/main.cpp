@@ -65,7 +65,9 @@ int main() {
     MatrixXd Q;                                                  // This will contain the QUBO problem
     double max_coeff;
     float lambda = 2.25;
-    string file = "../test/qap12.txt";
+    //C.E. Nugent, T.E. Vollmann and J. Ruml
+    //Y. Li and P.M. Pardalos
+    string file = "../test/nug16a.txt";
     double pen = QAP::quadratic_assignment_problem(Q, max_coeff, lambda, file);
     VectorXd x = solve(Q, IT, BINARY, K, LOG, filename);                   // Compute solution
     double y = QAP::y(Q, x, pen);
