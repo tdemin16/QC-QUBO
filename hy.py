@@ -4,23 +4,8 @@ import random
 from dwave.system.samplers import LeapHybridSampler
 import numpy as np
 import time
+from math import sqrt
 
-def run_annealer(theta):
-    iteration = hybrid.RacingBranches(
-                hybrid.InterruptableTabuSampler(),
-                hybrid.EnergyImpactDecomposer(size=1)
-                | hybrid.QPUSubproblemAutoEmbeddingSampler()
-                | hybrid.SplatComposer()
-              ) | hybrid.ArgMin()
-    workflow = hybrid.LoopUntilNoImprovement(iteration, convergence=1)
-
-    bqm = dimod.BinaryQuadraticModel({}, theta, 0, dimod.BINARY)
-
-    init_state = hybrid.State.from_problem(bqm)
-    final_state = workflow.run(init_state).result()
-    response = final_state.samples.first.sample.values()
-
-    return np.atleast_2d(list(response)).T
 
 def run_annealer_hybrid(theta):
     sampler = LeapHybridSampler()
@@ -29,16 +14,59 @@ def run_annealer_hybrid(theta):
 
     return np.atleast_2d(list(response)).T
 
-def to_matrix(nums):
+
+def to_NPP(nums):
     theta = [[0 for col in range(len(nums))] for row in range(len(nums))]
     c = sum(nums)
 
     for i in range(len(nums)):
         for j in range(len(nums)):
-            if i != j: theta[i][j] = nums[i] * nums[j]
-            else: theta[i][i] = nums[i] * (nums[i] - c)
+            if i != j:
+                theta[i][j] = nums[i] * nums[j]
+            else:
+                theta[i][i] = nums[i] * (nums[i] - c)
 
     return np.array(theta)
+
+
+def get_QAP(namefile, lam):
+    fo = open(namefile, "r")
+    n = int(fo.read(1))
+
+    i = 0
+    count = 0
+
+    f = [[0 for col in range(n)] for row in range(n)]
+    d = [[0 for col in range(n)] for row in range(n)]
+    line = fo.read()
+    for word in line.split():
+        if count < 9:
+            f[int(i/3)][int(i % 3)] = int(word)
+        else:
+            d[int(i/3)][int(i % 3)] = int(word)
+
+        i = i + 1
+        count += 1
+        if(count == 9):
+            i = 0
+        pass
+
+    fo.close()
+
+    Q = np.kron(f, d)
+    m = Q.max()
+    pen = lam * m
+    Q = np.einsum("ij,kl->ikjl", f, d).astype(np.float)
+    i = range(len(Q))
+
+    Q[i, :, i, :] += pen
+    Q[:, i, :, i] += pen
+    Q[i, i, i, i] -= 4 * pen
+
+    Q = Q.reshape(n**2, n**2)
+
+    return Q, m, pen
+
 
 def matrix_to_dict(theta):
     n = len(theta)
@@ -49,6 +77,7 @@ def matrix_to_dict(theta):
 
     return d
 
+
 def gen(n, ran):
     l = []
     for i in range(int(n)):
@@ -56,16 +85,21 @@ def gen(n, ran):
 
     return l
 
+
 def fQ(theta, sol):
     return ((np.atleast_2d(sol).T).dot(theta)).dot(sol)
-            
 
-nums = gen(2500, 100)
-theta = to_matrix(nums)
+
+namefile = "./test/test_1.txt"
+theta, m, pen = get_QAP(namefile, 1.25)
 
 start = time.time()
+print("Start hybrid")
 sol = run_annealer_hybrid(matrix_to_dict(theta))
 end = time.time()
 
 print(str(end - start) + "s")
-print(fQ(theta, sol))
+print("max coeff=" + str(m))
+print("y=" + str(pen * sqrt(len(theta)) * 2 + fQ(theta, sol)))
+print("pen=" + str(pen))
+print("fQ=" + str(fQ(theta, sol)))
