@@ -123,3 +123,21 @@ double QAP::quadratic_assignment_problem(MatrixXd &Q, double &max_coeff, float l
 double QAP::y(const MatrixXd &Q, const VectorXd &x, double penalty) {
     return penalty * sqrt(Q.innerSize()) * 2 + fQ(Q, x);
 }
+
+void QAP::to_file(chrono::duration<double> difference, int it, int k, float lambda, double penalty, double f, string file, double y, const VectorXd &x, string filename) {
+    ofstream of;
+    of.open("../out/" + filename + ".txt");
+
+    of << difference.count() << "s" <<endl
+       << "imax=" << it << endl
+       << "k=" << k << endl
+       << "lambda=" << lambda << endl
+       << "penalty=" << penalty << endl
+       << "f=" << f << endl
+       << "file=" + file << endl
+       << "y=" << y << endl
+       << "SOLUTION_VECTOR:" << endl
+       << x.transpose() << endl;
+
+    of.close();
+}
