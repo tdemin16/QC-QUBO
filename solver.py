@@ -108,7 +108,7 @@ def send_topology(active_nodes, active_edges, n):
 def main():
     signal.signal(signal.SIGINT, handler) # Add signal handling
     
-    mode = sys.argv[1]                    # Read mode from argv
+    mode = int(sys.argv[1])                    # Read mode from argv
     k = int(sys.argv[2])
     
     n = sys.stdin.read(10)                # Read problem's dimension from stdin (pipe)

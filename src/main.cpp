@@ -6,7 +6,7 @@ using namespace Eigen;
 
 /*
 Use ./deploy.sh to genereate an annealer executable
-Use ./simulate.sh to generate a classical eecutable
+Use ./simulate.sh to generate a classical excutable
 These two will compile in 64 bit architecture using g++ -std=c++2a
 
 BINARY computes using vectors of {0, 1}^n
@@ -43,7 +43,9 @@ NPP::diff
 QAP::quadratic_assignment_problem will generate a QAP problem
 - Input:
     Empty MatrixXf Q
-    strig containing input file ("../test/qapk.txt")
+    int max coefficient -> will store the max coefficient, not necessary used for statistics
+    float lambda factor -> used to compute penalty
+    string containing input file ("../test/qapk.txt")
 - Output:
     float penalty
 QAP::y
@@ -67,7 +69,7 @@ int main() {
     float lambda = 2.25;
     //C.E. Nugent, T.E. Vollmann and J. Ruml
     //Y. Li and P.M. Pardalos
-    string file = "../test/nug16a.txt";
+    string file = "../test/test_1.txt";
     double pen = QAP::quadratic_assignment_problem(Q, max_coeff, lambda, file);
     VectorXd x = solve(Q, IT, BINARY, K, LOG, filename); // Compute solution
     double y = QAP::y(Q, x, pen);

@@ -98,9 +98,11 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     string problem = "../out/prob-" + filename + ".txt";
     ofstream out_file;
 
-    out_file.open(problem);
-    out_file << Q;
-    out_file.close();
+    if(logs) {
+        out_file.open(problem);
+        out_file << Q;
+        out_file.close();
+    }
 
     // Initialization of perm vectors like an identity matrix of order n
     for (int i = 0; i < n; i++) {
@@ -239,10 +241,9 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
 
-    remove(log_file.c_str());
-    remove(problem.c_str());
-
     if (logs) {
+        remove(log_file.c_str());
+        remove(problem.c_str());
         printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
         printf("k:%d\n", k);
         printf("imax:%d, Nmax:%d, dmin:%d\n", imax, Nmax, dmin);
