@@ -37,7 +37,6 @@ extern mt19937_64 e_uniform_ann;
 extern mt19937_64 e_uniform_pert;
 extern mt19937_64 e_uniform_vector;
 extern uniform_real_distribution<double> d_real_uniform;
-extern uniform_int_distribution<int> d_int_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 

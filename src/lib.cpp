@@ -7,7 +7,6 @@ mt19937_64 e_uniform_ann;
 mt19937_64 e_uniform_pert;
 mt19937_64 e_uniform_vector;
 uniform_real_distribution<double> d_real_uniform;
-uniform_int_distribution<int> d_int_uniform(0, 5436);
 pid_t child_pid;
 int fd[4];
 
@@ -98,7 +97,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     string problem = "../out/prob-" + filename + ".txt";
     ofstream out_file;
 
-    if(logs) {
+    if (logs) {
         out_file.open(problem);
         out_file << Q;
         out_file.close();
@@ -256,7 +255,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
 #ifdef SIMULATION
     if (f_gold == minimum) {
         cout << "minimum reached" << endl;
-    } else{
+    } else {
         cout << "minimum not reached" << endl;
     }
 #endif
@@ -430,9 +429,10 @@ void shuffle_map(map<int, int> &m) {
 void shuffle_vector(vector<int> &v) {  // Fisher and Yates' algorithm
     int n = v.size();
     int j;
+    uniform_int_distribution<int> d_int_uniform(0, n - 1);
 
     for (int i = n - 1; i >= 0; i--) {
-        j = d_int_uniform(e_uniform_vector) * i / 5435;
+        j = d_int_uniform(e_uniform_vector);
         swap(v[i], v[j]);
     }
 }
