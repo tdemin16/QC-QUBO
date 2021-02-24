@@ -3,19 +3,20 @@
 
 #include <math.h>
 #include <sys/signal.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <map>
-#include <unordered_map>
 #include <random>
 #include <string>
-#include <fstream>
+#include <unordered_map>
 
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
@@ -40,7 +41,7 @@ extern uniform_real_distribution<double> d_real_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax=1000, int mode=BINARY, int k=4, bool logs=true, string filename = to_string(time(0)));
+VectorXd solve(MatrixXd Q, int imax = 1000, int mode = BINARY, int k = 4, bool logs = true, string filename = to_string(time(0)));
 
 void handle_sigint(int sig);
 
@@ -48,9 +49,9 @@ void handle_sigint(int sig);
 void init_child(int mode, int k);
 
 // init seed in order to generate random numbers
-void init_seeds();
+void init_seeds(string filename);
 
-// Input: number of nodes
+// Input: map from topology nodes to ideal nodes, SparseMatrix of edges, number of nodes
 // Return: a SparseMatrix A containing Chimera's topology
 void get_topology(unordered_map<int, int> &nodes, SparseMatrix<double> &edges, int n);
 

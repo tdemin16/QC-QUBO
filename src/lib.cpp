@@ -12,7 +12,7 @@ int fd[4];
 
 VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename) {
     //Init
-    int n = Q.outerSize();
+    int n = Q.outerSize();  // Get number of vaiables
 
     if (mode != BINARY && mode != SPIN) {
         cout << "[Warning] mode must be 0 or 1" << endl;
@@ -49,10 +49,10 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
         exit(4);
     }
 
-    init_seeds();
-    unordered_map<int, int> nodes;
-    SparseMatrix<double> edges;
-    get_topology(nodes, edges, n);  // Pegasus topology
+    init_seeds(filename);
+    unordered_map<int, int> nodes;  // map from topology nodes to ideal ones
+    SparseMatrix<double> edges;     // SparseMatrix of edges
+    get_topology(nodes, edges, n);  // Dwave topology
 
     //Input
     double pmin = 0.1;       // minimum probability 0 < pδ < 0.5 of permutation modification
@@ -93,24 +93,25 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     bool simul_ann;
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
-    string log_file = "../out/tmp-" + filename + ".txt";
-    string problem = "../out/prob-" + filename + ".txt";
+    string log_file = "../out/tmp-" + filename + ".txt";  // Temporary log file output
+    string problem = "../out/prob-" + filename + ".txt";  // Temporary problem file
     ofstream out_file;
 
     if (logs) {
+        // With large n could take some time (approx 30s to 1 min)
         out_file.open(problem);
         out_file << Q;
         out_file.close();
     }
 
-    // Initialization of perm vectors like an identity matrix of order n
+    // Initialization of perm vectors like an identity matrix of order n according to thesis
     for (int i = 0; i < n; i++) {
         perm[i] = i;
         perm1[i] = i;
         perm2[i] = i;
     }
 
-    // Hadamard product between a permuted Q and edges
+    // Construction of matrix theta considering DWave's topology
     theta1 = g_strong(Q, nodes, edges, perm1, perm1, p);
     theta2 = g_strong(Q, nodes, edges, perm2, perm2, p);
 
@@ -294,7 +295,7 @@ void init_child(int mode, int k) {
     }
 }
 
-void init_seeds() {
+void init_seeds(string filename) {
     random_device rd;
     seed_seq seed_g{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
     seed_seq seed_h{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
@@ -302,6 +303,27 @@ void init_seeds() {
     seed_seq seed_ann{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
     seed_seq seed_pert{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
     seed_seq seed_vector{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+
+    ofstream of;
+    of.open("../out/seed-" + filename + ".txt");
+    of << "g=";
+    seed_g.param(ostream_iterator<int>(of, " "));
+    of << endl
+       << "h=";
+    seed_h.param(ostream_iterator<int>(of, " "));
+    of << endl
+       << "shuffle=";
+    seed_shuffle.param(ostream_iterator<int>(of, " "));
+    of << endl
+       << "ann=";
+    seed_ann.param(ostream_iterator<int>(of, " "));
+    of << endl
+       << "pert=";
+    seed_pert.param(ostream_iterator<int>(of, " "));
+    of << endl
+       << "vector=";
+    seed_pert.param(ostream_iterator<int>(of, " "));
+    of.close();
 
     e_uniform_g.seed(seed_g);
     e_uniform_h.seed(seed_h);
@@ -574,6 +596,7 @@ VectorXd map_back(const VectorXd &z, const vector<int> &perm) {
     return z_ret;
 }
 
+// Unused
 double simulated_annealing(double f_first, double f_star, double p) {
     double T = -1 / log(p);
     return exp(-(f_first - f_star) / T);
