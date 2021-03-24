@@ -98,7 +98,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     ofstream out_file;
 
     if (logs) {
-        // With large n could take some time (approx 30s to 1 min)
+        // With large n could take some time (approx from 30s to 1 min)
         out_file.open(problem);
         out_file << Q;
         out_file.close();

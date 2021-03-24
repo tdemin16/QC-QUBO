@@ -19,4 +19,7 @@ class QAP {
     static void to_file(chrono::duration<double> difference, int it, int k, float lambda, double penalty, double f, string file, double y, const VectorXd &x, string filename);
 };
 
+class TSP {
+};
+
 #endif

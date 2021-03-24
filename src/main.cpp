@@ -55,7 +55,9 @@ QAP::y
     penalty
 */
 
-#define IT 2000   // Algorithm iteration
+#define IT 4000   // Algorithm iteration
+#define N 500
+#define RANGE 100
 #define K 5       // Annealer's run
 #define LOG true  // Log true/false
 
@@ -65,21 +67,17 @@ int main() {
     auto start = chrono::steady_clock::now();
 
     MatrixXd Q; // This will contain the QUBO problem
-    double max_coeff;
-    float lambda = 2.25;
-    //C.E. Nugent, T.E. Vollmann and J. Ruml
-    //Y. Li and P.M. Pardalos
-    string file = "../test/test_1.txt";
-    double pen = QAP::quadratic_assignment_problem(Q, max_coeff, lambda, file);
+    vector<int> nums(N);
+    long long c = NPP::number_partitioning_problem(Q, nums, RANGE);
     VectorXd x = solve(Q, IT, BINARY, K, LOG, filename); // Compute solution
-    double y = QAP::y(Q, x, pen);
+    long long diff = NPP::diff(Q, x, c);
 
     auto end = chrono::steady_clock::now(); // end timer
     chrono::duration<double> difference = end - start;
 
     cout << difference.count() << endl;
 
-    QAP::to_file(difference, IT, K, lambda, pen, fQ(Q, x), file, y, x, filename);
+    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums, filename);
 
     return 0;
 }
