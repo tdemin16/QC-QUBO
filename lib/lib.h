@@ -7,6 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -15,6 +16,7 @@
 #include <iterator>
 #include <map>
 #include <random>
+#include <unordered_set>
 #include <string>
 #include <unordered_map>
 
@@ -118,6 +120,7 @@ void close_child();
 
 #ifdef SIMULATION
 double compute_Q(const MatrixXd &Q, int mode);
+VectorXd compute_Q_vector(const MatrixXd &Q, int mode);
 void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
 #else
 void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);

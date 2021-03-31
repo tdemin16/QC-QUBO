@@ -1,0 +1,41 @@
+Soluzione accettabile:
+0 1 0 0 1 0 0 0 0 0 0 1 0 0 1 0 -> 1 0 3 2
+   =
+0 1 0 0
+1 0 0 0
+0 0 0 1
+0 0 1 0
+
+
+Soluzione non accettabile:
+1 0 0 1 0 0 0 0 0 1 0 0 0 1 0 0 -> 0/3 _ 1 1
+   =
+1 0 0 1
+0 0 0 0
+0 1 0 0
+0 1 0 0
+
+
+Validazione:
+   1          2          3          4
+1 0 0 1 || 0 0 0 0 || 0 1 0 0 || 0 1 0 0
+
+A) Rimozione doppioni (seq 1) prendendo una posizione a random tra quelle con valore 1
+   1          2          3          4
+0 0 0 1 || 0 0 0 0 || 0 1 0 0 || 0 1 0 0
+
+B) Si inizializzano 2 set:
+    a) il primo contenente tutti i possibili valori -> {0, 1, 2, 3}
+    b) il secondo contenente solo i valori presenti nel vettore risultante dopo A. -> {3, 1}
+Differenza tra i due set -> x = {0, 2}
+
+C) Riempimento sequenze vuote utilizzando x
+   1          2          3          4
+0 0 0 1 || 1 0 0 0 || 0 1 0 0 || 0 1 0 0
+
+D) Rimozione duplicati (modificando la sottosequenza a random)
+   1          2          3          4
+0 0 0 1 || 1 0 0 0 || 0 1 0 0 || 0 0 1 0
+
+Soluzione accettabile
+0 0 0 1 1 0 0 0 0 1 0 0 0 0 1 0 -> 3 0 1 2

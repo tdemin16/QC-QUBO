@@ -250,8 +250,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
         printf("e:%d\td:%d\ti:%d\n", e, d, i - 1);
 
         cout << endl
-             << "f_gold: " << f_gold << endl
-             << endl;
+             << "f_gold: " << f_gold << endl;
     }
 #ifdef SIMULATION
     if (f_gold == minimum) {
@@ -640,6 +639,29 @@ double compute_Q(const MatrixXd &Q, int mode) {
         i++;
     } while (i < N);
     return min;
+}
+
+VectorXd compute_Q_vector(const MatrixXd &Q, int mode) {
+    int n = Q.outerSize();
+    VectorXd x_min(n);
+    VectorXd x(n);
+    unsigned long long N = pow(2, n);
+    double min, e;
+    for (int i = 0; i < n; i++) x(i) = mode;
+
+    min = fQ(Q, x);
+    x_min = x;
+    unsigned long long i = 1;
+    do {
+        increment(x, mode);
+        e = fQ(Q, x);
+        if (e <= min) {
+            x_min = x;
+            min = e;
+        }
+        i++;
+    } while (i < N);
+    return x_min;
 }
 
 void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
