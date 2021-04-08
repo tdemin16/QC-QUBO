@@ -123,7 +123,7 @@ vector<long long> TSP::decode_solution(const VectorXd &x, bool validate) {
                 it++;
             }
         }
-
+        
         result.clear();
         for (auto it : all) {
             if (ins.find(it) == ins.end()) {
@@ -131,6 +131,7 @@ vector<long long> TSP::decode_solution(const VectorXd &x, bool validate) {
             }
         }
 
+        it = result.begin();
         if (ins.size() != all.size()) {
             for (int i = 0; i < n; i++) {
                 if (sw[solution[i]] == 0)
@@ -189,4 +190,21 @@ double TSP::tsp_brute(const MatrixXd &D, int s) {
     } while (next_permutation(vertex.begin(), vertex.end()));
 
     return min_path;
+}
+
+bool TSP::is_acceptable(const VectorXd &x) {
+    long long n = sqrt(x.size());
+    vector<long long> count(n, 0);
+    for (long long i = 0; i < n; i++) {
+        for (long long j = 0; j < n; j++) {
+            if (x(n * i + j) == 1) {
+                count[i]++;
+            }
+        }
+    }
+
+    for(auto it:count) {
+        if(it != 1) return false;
+    }
+    return true;
 }

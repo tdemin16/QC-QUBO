@@ -10,7 +10,7 @@ uniform_real_distribution<double> d_real_uniform;
 pid_t child_pid;
 int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename) {
+VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, string filename) {
     //Init
     int n = Q.outerSize();  // Get number of vaiables
 
@@ -49,21 +49,21 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
         exit(4);
     }
 
-    init_seeds(filename);
+    init_seeds(filename, log_file);
     unordered_map<int, int> nodes;  // map from topology nodes to ideal ones
     SparseMatrix<double> edges;     // SparseMatrix of edges
     get_topology(nodes, edges, n);  // Dwave topology
 
     //Input
-    double pmin = 0.1;       // minimum probability 0 < pδ < 0.5 of permutation modification
-    double eta = 0.01f;      // probability decreasing rate η > 0
-    double q = 0.2f;         // candidate perturbation probability q > 0
-    double lambda0 = 3 / 2;  // initial balancing factor λ0 > 0
-    int N = 10;              // Decreasing time
+    const double pmin = 0.1;       // minimum probability 0 < pδ < 0.5 of permutation modification
+    const double eta = 0.01f;      // probability decreasing rate η > 0
+    const double q = 0.2f;         // candidate perturbation probability q > 0
+    const double lambda0 = 3 / 2;  // initial balancing factor λ0 > 0
+    const int N = 10;              // Decreasing time
 
     //Termination Parameters
-    int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
-    int dmin = 70;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
+    const int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
+    const int dmin = 70;   // Number of solution that are worse than the best beyond which the best solution is not valid anymore
 
     MatrixXd In(n, n);  //Identity matrix
     In.setIdentity();
@@ -93,11 +93,11 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     bool simul_ann;
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
-    string log_file = "../out/tmp-" + filename + ".txt";  // Temporary log file output
+    string file_log = "../out/tmp-" + filename + ".txt";  // Temporary log file output
     string problem = "../out/prob-" + filename + ".txt";  // Temporary problem file
     ofstream out_file;
 
-    if (logs) {
+    if (log_file) {
         // With large n could take some time (approx from 30s to 1 min)
         out_file.open(problem);
         out_file << Q;
@@ -162,6 +162,13 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     }
 
     int i = 1;
+    /*int count_acc = 0;
+    string acc_prob = "../out/acc-" + filename + ".txt";
+    out_file.open(acc_prob);
+    stringstream ss;
+    ss << Q;
+    out_file << ss.str() << endl;
+    ss.str("");*/
     do {
         if (i == 1) cout << "Start computing the solution" << endl
                          << endl;
@@ -184,6 +191,22 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
             h(z_first, p, mode);  // possibly perturb the candidate
             perturbed = true;
         }
+
+        //TMP
+        /*if (is_acceptable(z_first)) {
+            out_file << "ACC:" << endl;
+            count_acc++;
+            out_file << g_strong(Q, nodes, edges, perm, perm, 0);
+            out_file << endl;
+            for (auto it : perm) out_file << it << " ";
+            out_file << endl;
+        } else if (i == (int)imax / 4) {
+            out_file << "NA:" << endl;
+            out_file << g_strong(Q, nodes, edges, perm, perm, 0);
+            out_file << endl;
+            for (auto it : perm) out_file << it << " ";
+            out_file << endl;
+        }*/
 
         if (!comp_vectors(z_first, z_star)) {
             f_first = fQ(Q, z_first);
@@ -218,9 +241,9 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
         }
 
 #ifdef SIMULATION
-        if (logs) log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, log_file);
+        if (logs) log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, file_log, log_file);
 #else
-        if (logs) log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, log_file);
+        if (logs) log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, imax, filename, log_file);
 #endif
         end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
@@ -229,6 +252,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
                  << diff.count() << "s" << endl
                  << endl;
         }
+        
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
@@ -242,7 +266,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
     close(fd[WRITE + 2]);
 
     if (logs) {
-        remove(log_file.c_str());
+        remove(file_log.c_str());
         remove(problem.c_str());
         printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
         printf("k:%d\n", k);
@@ -259,6 +283,8 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, string filename
         cout << "minimum not reached" << endl;
     }
 #endif
+
+    //cout << "Count Acc: " << count_acc << endl;
 
     return z_gold;
 }
@@ -294,7 +320,7 @@ void init_child(int mode, int k) {
     }
 }
 
-void init_seeds(string filename) {
+void init_seeds(string filename, bool log) {
     random_device rd;
     seed_seq seed_g{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
     seed_seq seed_h{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
@@ -302,27 +328,28 @@ void init_seeds(string filename) {
     seed_seq seed_ann{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
     seed_seq seed_pert{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
     seed_seq seed_vector{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
-
-    ofstream of;
-    of.open("../out/seed-" + filename + ".txt");
-    of << "g=";
-    seed_g.param(ostream_iterator<int>(of, " "));
-    of << endl
-       << "h=";
-    seed_h.param(ostream_iterator<int>(of, " "));
-    of << endl
-       << "shuffle=";
-    seed_shuffle.param(ostream_iterator<int>(of, " "));
-    of << endl
-       << "ann=";
-    seed_ann.param(ostream_iterator<int>(of, " "));
-    of << endl
-       << "pert=";
-    seed_pert.param(ostream_iterator<int>(of, " "));
-    of << endl
-       << "vector=";
-    seed_pert.param(ostream_iterator<int>(of, " "));
-    of.close();
+    if (log) {
+        ofstream of;
+        of.open("../out/seed-" + filename + ".txt");
+        of << "g=";
+        seed_g.param(ostream_iterator<int>(of, " "));
+        of << endl
+           << "h=";
+        seed_h.param(ostream_iterator<int>(of, " "));
+        of << endl
+           << "shuffle=";
+        seed_shuffle.param(ostream_iterator<int>(of, " "));
+        of << endl
+           << "ann=";
+        seed_ann.param(ostream_iterator<int>(of, " "));
+        of << endl
+           << "pert=";
+        seed_pert.param(ostream_iterator<int>(of, " "));
+        of << endl
+           << "vector=";
+        seed_pert.param(ostream_iterator<int>(of, " "));
+        of.close();
+    }
 
     e_uniform_g.seed(seed_g);
     e_uniform_h.seed(seed_h);
@@ -664,7 +691,7 @@ VectorXd compute_Q_vector(const MatrixXd &Q, int mode) {
     return x_min;
 }
 
-void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
+void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename, bool log_file) {
     ofstream out_file;
     stringstream ss;
     ss << z_star.transpose();
@@ -674,29 +701,57 @@ void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, d
     if (simul_ann) out += "\tsimulated annealing";
 
     cout << out;
-
-    ss.str("");
-    ss << Q;
-    out += "\n" + ss.str();
-    out_file.open(filename);
-    out_file << out;
-    out_file.close();
+    if (log_file) {
+        ss.str("");
+        ss << Q;
+        out += "\n" + ss.str();
+        out_file.open(filename);
+        out_file << out;
+        out_file.close();
+    }
 }
 #else
-void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename) {
+void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, bool log_file) {
     ofstream out_file;
     stringstream ss;
     string out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
+    string tmp_file = "../out/tmp-" + filename + ".txt";
+    string file_log = "../out/" + filename + ".txt";
 
     if (perturbed) out += "\tperturbed";
     if (simul_ann) out += "\tsimulated annealing";
 
     cout << out;
 
-    ss << z_star.transpose();
-    out += "\n" + ss.str();
-    out_file.open(filename);
-    out_file << out;
-    out_file.close();
+    if (log_file) {
+        ss << z_star.transpose();
+        out += "\n" + ss.str();
+        out_file.open(tmp_file);
+        out_file << out;
+        out_file.close();
+    }
+    int par = imax / 4;
+    if (i % par == 0) {
+        out_file.open(file_log, ios_base::app);
+        out_file << out + "\n";
+        out_file.close();
+    }
 }
 #endif
+
+bool is_acceptable(const VectorXd &x) {
+    long long n = sqrt(x.size());
+    vector<long long> count(n, 0);
+    for (long long i = 0; i < n; i++) {
+        for (long long j = 0; j < n; j++) {
+            if (x(n * i + j) == 1) {
+                count[i]++;
+            }
+        }
+    }
+
+    for (auto it : count) {
+        if (it != 1) return false;
+    }
+    return true;
+}

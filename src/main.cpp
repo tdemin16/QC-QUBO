@@ -57,36 +57,36 @@ QAP::y
     penalty
 */
 
-#define IT 20  // Algorithm iteration
-#define N 3
+#define IT 4  // Algorithm iteration
+#define N 10
 #define K 5       // Number of measurements per problem
+#define RANGE 1000000
 #define LOG true  // Log true/false
+#define LOG_FILE true
 
 int main() {
     string filename = to_string(time(0));
     // Start timer
     auto start = chrono::steady_clock::now();
 
-    MatrixXd Q, D;  // This will contain the QUBO problem
+    MatrixXd Q;  // This will contain the QUBO problem
+    vector<ll> nums(N);
 
-    TSP::travelling_salesman_problem(Q, D, N);
+    ll c = NPP::number_partitioning_problem(Q, nums, RANGE);
 
     VectorXd x(N);
-    x = solve(Q, IT, BINARY, K, LOG, filename);
+    x = solve(Q, IT, BINARY, K, LOG, LOG_FILE, filename);
 
     auto end = chrono::steady_clock::now();  // end timer
     chrono::duration<double> difference = end - start;
 
     cout << endl
          << difference.count() << "s" << endl;
-    cout << endl
-         << x.transpose() << endl;
-         
-    vector<long long> sol = TSP::decode_solution(x, true);
-    for (auto i : sol) cout << i << " ";
-    cout << endl;
-    cout << "QUBO: " << TSP::cost_route(D, sol) << endl;
-    cout << "BRUTE: " << TSP::tsp_brute(D) << endl;
+
+
+    ll diff = NPP::diff(Q, x, c);
+
+    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums, filename);
 
     return 0;
 }

@@ -9,6 +9,7 @@ class TSP {
     static vector<long long> decode_solution(const VectorXd &x, bool validate);
     static double cost_route(const MatrixXd &D, vector<long long> solution);
     static double tsp_brute(const MatrixXd &D, int s = 0);
+    static bool is_acceptable(const VectorXd &x);
 
    private:
     static void add_cost_objective(map<pair<long long, long long>, double> &qubo, const MatrixXd &D, double cost_constant, int n);

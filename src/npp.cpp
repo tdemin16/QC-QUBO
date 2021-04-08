@@ -1,6 +1,6 @@
 #include "../lib/npp.h"
 
-long long NPP::number_partitioning_problem(MatrixXd &Q, vector<long long> &nums, int range) {
+ll NPP::number_partitioning_problem(MatrixXd &Q, vector<ll> &nums, int range) {
     if (range < 1) {
         cout << "Range must be >= 1" << endl;
         exit(1);
@@ -11,8 +11,8 @@ long long NPP::number_partitioning_problem(MatrixXd &Q, vector<long long> &nums,
     uniform_int_distribution<long> d_int_uniform(1, range);
     random_device rd;
     seed_seq seed{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
-    long long c = 0;
-    long long prod;
+    ll c = 0;
+    ll prod;
 
     Q.resize(n, n);
     e_uniform.seed(seed);
@@ -21,8 +21,8 @@ long long NPP::number_partitioning_problem(MatrixXd &Q, vector<long long> &nums,
         c += nums[i] = d_int_uniform(e_uniform);
     }
 
-    for (long long i = 0; i < n; i++) {
-        for (long long j = i; j < n; j++) {
+    for (ll i = 0; i < n; i++) {
+        for (ll j = i; j < n; j++) {
             if (i != j) {
                 prod = nums[i] * nums[j];
                 Q(i, j) = prod;
@@ -36,14 +36,14 @@ long long NPP::number_partitioning_problem(MatrixXd &Q, vector<long long> &nums,
     return c;
 }
 
-long long NPP::diff(const MatrixXd &Q, const VectorXd &x, long long c) {
+ll NPP::diff(const MatrixXd &Q, const VectorXd &x, ll c) {
     return sqrt(pow(c, 2) + 4 * fQ(Q, x));
 }
 
-void NPP::to_file(chrono::duration<double> difference, int it, double f, int n, int range, long long diff, const VectorXd &x, const vector<int> nums, string filename) {
+void NPP::to_file(chrono::duration<double> difference, int it, double f, int n, int range, ll diff, const VectorXd &x, const vector<ll> nums, string filename) {
     long unsigned len = 0;
     ofstream of;
-    of.open("../out/" + filename + ".txt");
+    of.open("../out/" + filename + ".txt", ios_base::app);
 
     of << difference.count() << "s" << endl
        << "imax=" << it << endl

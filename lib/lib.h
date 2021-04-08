@@ -16,9 +16,9 @@
 #include <iterator>
 #include <map>
 #include <random>
-#include <unordered_set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Eigen/Core"
 #include "Eigen/IterativeLinearSolvers"
@@ -33,6 +33,8 @@ using namespace Eigen;
 #define BINARY 0
 #define SPIN -1
 
+typedef long long ll;
+
 extern mt19937_64 e_uniform_g;
 extern mt19937_64 e_uniform_h;
 extern mt19937_64 e_uniform_shuffle;
@@ -43,7 +45,7 @@ extern uniform_real_distribution<double> d_real_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax = 1000, int mode = BINARY, int k = 4, bool logs = true, string filename = to_string(time(0)));
+VectorXd solve(MatrixXd Q, int imax = 1000, int mode = BINARY, int k = 4, bool logs = true, bool log_file = false, string filename = to_string(time(0)));
 
 void handle_sigint(int sig);
 
@@ -51,7 +53,7 @@ void handle_sigint(int sig);
 void init_child(int mode, int k);
 
 // init seed in order to generate random numbers
-void init_seeds(string filename);
+void init_seeds(string filename, bool log);
 
 // Input: map from topology nodes to ideal nodes, SparseMatrix of edges, number of nodes
 // Return: a SparseMatrix A containing Chimera's topology
@@ -121,9 +123,11 @@ void close_child();
 #ifdef SIMULATION
 double compute_Q(const MatrixXd &Q, int mode);
 VectorXd compute_Q_vector(const MatrixXd &Q, int mode);
-void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
+void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename, bool log_file);
 #else
-void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename);
+void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, bool log_file);
 #endif
+
+bool is_acceptable(const VectorXd &x);  // TMP
 
 #endif  //LIB_H
