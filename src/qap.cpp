@@ -2,7 +2,7 @@
 
 double QAP::quadratic_assignment_problem(MatrixXd &Q, double &max_coeff, float lambda, string file) {
     int n;
-    long long N;
+    ll N;
     double pen;
     ifstream in;
 
@@ -35,10 +35,10 @@ double QAP::quadratic_assignment_problem(MatrixXd &Q, double &max_coeff, float l
 
     pen = (lambda * max_coeff);
 
-    long long k;
-    for (long long i = 0; i < N; i++) {
+    ll k;
+    for (ll i = 0; i < N; i++) {
         k = (i / n) * n;
-        for (long long j = k; j < k + n; j++) {
+        for (ll j = k; j < k + n; j++) {
             if (i != j)
                 Q(i, j) += pen;
             else
@@ -46,9 +46,9 @@ double QAP::quadratic_assignment_problem(MatrixXd &Q, double &max_coeff, float l
         }
     }
 
-    for (long long i = 0; i < N; i++) {
+    for (ll i = 0; i < N; i++) {
         k = i % n;
-        for (long long j = k; j < N; j += n) {
+        for (ll j = k; j < N; j += n) {
             if (i != j) Q(i, j) += pen;
         }
     }

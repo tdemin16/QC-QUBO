@@ -20,6 +20,7 @@ def run_annealer(theta, sampler, k):
     
     # Samples are orderes from lowest energy to highest -> fist sample has lowest energy
     response = response.first.sample.values()
+    sys.stderr.write(str(response) + "\n")
 
     return response
 
@@ -61,21 +62,10 @@ def pegasus(n):
     return graph
 
 # Given a list l and a bool value mode, send l back to C++
-def send_msg(l, mode):
-    if mode == -1: # if mode == SPIN
-                   # Each message contains +/- followed by 1: "+1", "-1", "+1", "+1" 
-        for j in range(len(l)):
-            if(j == 1):
-                msg = ("+" + str(j)).encode()
-            else:
-                j = 1
-                msg = ("-" + str(j)).encode()
-            os.write(1, msg)  # write solution on pipe
-            pass
-    else: # if mode == BINARY
-        for j in l:
-            msg = (" " + str(j)).encode() # Space added to have a msg of dim = 2: " 1", " 0", " 1"...
-            os.write(1, msg)
+def send_msg(l):
+    for j in l:
+        msg = (" " + str(j)).encode()
+        os.write(1, msg)
 
 
 def send_topology(active_nodes, active_edges, n):
@@ -108,8 +98,7 @@ def send_topology(active_nodes, active_edges, n):
 def main():
     signal.signal(signal.SIGINT, handler) # Add signal handling
     
-    mode = int(sys.argv[1])                    # Read mode from argv
-    k = int(sys.argv[2])
+    k = int(sys.argv[1]) # read from argv
     
     n = sys.stdin.read(10)                # Read problem's dimension from stdin (pipe)
     n = int(n.split('\x00', 1)[0])        # Decode the dimension
@@ -161,7 +150,7 @@ def main():
                 i = 0
                 l = run_annealer(theta, sampler, k) # run the annealer with theta and sampler
 
-                send_msg(l, mode) # Send the result
+                send_msg(l) # Send the result
 
                 theta = {}  # clear dictionary
             

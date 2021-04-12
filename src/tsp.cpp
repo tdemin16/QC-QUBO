@@ -1,7 +1,7 @@
 #include "../lib/tsp.h"
 
 void TSP::travelling_salesman_problem(MatrixXd &Q, MatrixXd &D, int n) {
-    map<pair<long long, long long>, double> qubo;
+    map<pair<ll, ll>, double> qubo;
     Q.resize(n * n, n * n);
     D.resize(n, n);
     srand(time(0));
@@ -23,7 +23,7 @@ void TSP::travelling_salesman_problem(MatrixXd &Q, MatrixXd &D, int n) {
     to_MatrixXd(Q, qubo);
 }
 
-void TSP::add_cost_objective(map<pair<long long, long long>, double> &qubo, const MatrixXd &D, double B, int n) {
+void TSP::add_cost_objective(map<pair<ll, ll>, double> &qubo, const MatrixXd &D, double B, int n) {
     int r, c;
 
     for (int t = 0; t < n; t++) {
@@ -39,12 +39,12 @@ void TSP::add_cost_objective(map<pair<long long, long long>, double> &qubo, cons
     }
 }
 
-void TSP::add_time_constraints(map<pair<long long, long long>, double> &qubo, double A, int n) {
+void TSP::add_time_constraints(map<pair<ll, ll>, double> &qubo, double A, int n) {
     int r, c;
     for (int t = 0; t < n; t++) {
         for (int i = 0; i < n; i++) {
             r = t * n + i;
-            auto it = qubo.find(pair<long long, long long>(r, r));
+            auto it = qubo.find(pair<ll, ll>(r, r));
             if (it != qubo.end())
                 qubo[make_pair(r, r)] = -A;
             else
@@ -58,12 +58,12 @@ void TSP::add_time_constraints(map<pair<long long, long long>, double> &qubo, do
     }
 }
 
-void TSP::add_position_constraints(map<pair<long long, long long>, double> &qubo, double A, int n) {
+void TSP::add_position_constraints(map<pair<ll, ll>, double> &qubo, double A, int n) {
     int r, c;
     for (int i = 0; i < n; i++) {
         for (int t1 = 0; t1 < n; t1++) {
             r = t1 * n + i;
-            auto it = qubo.find(pair<long long, long long>(r, r));
+            auto it = qubo.find(pair<ll, ll>(r, r));
             if (it != qubo.end())
                 qubo[make_pair(r, r)] = -A;
             else
@@ -77,7 +77,7 @@ void TSP::add_position_constraints(map<pair<long long, long long>, double> &qubo
     }
 }
 
-void TSP::to_MatrixXd(MatrixXd &Q, const map<pair<long long, long long>, double> &qubo) {
+void TSP::to_MatrixXd(MatrixXd &Q, const map<pair<ll, ll>, double> &qubo) {
     int r, c;
     for (auto it : qubo) {
         r = it.first.first;
@@ -86,17 +86,17 @@ void TSP::to_MatrixXd(MatrixXd &Q, const map<pair<long long, long long>, double>
     }
 }
 
-vector<long long> TSP::decode_solution(const VectorXd &x, bool validate) {
-    long long n = sqrt(x.size());
-    long long last_j = -1;
-    vector<long long> solution(n, -1);
-    unordered_set<long long> all;
-    unordered_set<long long> ins;
-    unordered_set<long long> result;
-    vector<long long> sw(n, 0);
+vector<ll> TSP::decode_solution(const VectorXd &x, bool validate) {
+    ll n = sqrt(x.size());
+    ll last_j = -1;
+    vector<ll> solution(n, -1);
+    unordered_set<ll> all;
+    unordered_set<ll> ins;
+    unordered_set<ll> result;
+    vector<ll> sw(n, 0);
 
-    for (long long i = 0; i < n; i++) {
-        for (long long j = 0; j < n; j++) {
+    for (ll i = 0; i < n; i++) {
+        for (ll j = 0; j < n; j++) {
             if (x(n * i + j) == 1) {
                 solution[i] = j;
                 last_j = j;
@@ -148,9 +148,9 @@ vector<long long> TSP::decode_solution(const VectorXd &x, bool validate) {
     return solution;
 }
 
-double TSP::cost_route(const MatrixXd &D, vector<long long> solution) {
+double TSP::cost_route(const MatrixXd &D, vector<ll> solution) {
     int n = solution.size();
-    long long a, b;
+    ll a, b;
     double cost = 0;
 
     for (int i = 0; i < n; i++) {
@@ -193,10 +193,10 @@ double TSP::tsp_brute(const MatrixXd &D, int s) {
 }
 
 bool TSP::is_acceptable(const VectorXd &x) {
-    long long n = sqrt(x.size());
-    vector<long long> count(n, 0);
-    for (long long i = 0; i < n; i++) {
-        for (long long j = 0; j < n; j++) {
+    ll n = sqrt(x.size());
+    vector<ll> count(n, 0);
+    for (ll i = 0; i < n; i++) {
+        for (ll j = 0; j < n; j++) {
             if (x(n * i + j) == 1) {
                 count[i]++;
             }

@@ -30,8 +30,8 @@ using namespace Eigen;
 
 #define READ 0
 #define WRITE 1
-#define BINARY 0
-#define SPIN -1
+#define LOG_CONSOLE 0x01
+#define LOG_FILE 0x02
 
 typedef long long ll;
 
@@ -45,12 +45,12 @@ extern uniform_real_distribution<double> d_real_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax = 1000, int mode = BINARY, int k = 4, bool logs = true, bool log_file = false, string filename = to_string(time(0)));
+VectorXd solve(MatrixXd Q, int imax = 1000, int k = 4, short logs = 0x01, string filename = to_string(time(0)));
 
 void handle_sigint(int sig);
 
 // change process code with python solver.py
-void init_child(int mode, int k);
+void init_child(int k);
 
 // init seed in order to generate random numbers
 void init_seeds(string filename, bool log);
@@ -91,7 +91,7 @@ VectorXd send_to_annealer(const SparseMatrix<double> &theta, int n);
 
 // Input: Vector of n integers z, probability pr
 // With probability pr, the element zi = -zi
-void h(VectorXd &z, double pr, int mode);
+void h(VectorXd &z, double pr);
 
 // Input: λ0, i, e
 // Return: Minimum between λ0 and λ0/(2+i-e)
@@ -99,7 +99,7 @@ double min(double lambda0, int i, int e);
 
 // Input: weight theta
 // Return: VectorXd that minimize the weight function
-VectorXd min_energy(const SparseMatrix<double> &theta, int mode);
+VectorXd min_energy(const SparseMatrix<double> &theta);
 
 // Input: weight function theta, VectorXd x = {-1, 1}^n
 // Return: E(theta, x)
@@ -107,7 +107,7 @@ double E(const SparseMatrix<double> &theta, VectorXd x);
 
 // Input: VectorXd of {-1, 1}^n v
 // Treats the vector as a binary number but made of -1 and 1(instead of 0 and 1). Performs the increment
-void increment(VectorXd &v, int mode);
+void increment(VectorXd &v);
 
 VectorXd map_back(const VectorXd &z, const vector<int> &perm);
 
@@ -121,11 +121,11 @@ bool comp_vectors(const VectorXd &z1, const VectorXd &z2);
 void close_child();
 
 #ifdef SIMULATION
-double compute_Q(const MatrixXd &Q, int mode);
-VectorXd compute_Q_vector(const MatrixXd &Q, int mode);
-void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename, bool log_file);
+double compute_Q(const MatrixXd &Q);
+VectorXd compute_Q_vector(const MatrixXd &Q);
+void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, short logs);
 #else
-void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, bool log_file);
+void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, short logs);
 #endif
 
 bool is_acceptable(const VectorXd &x);  // TMP

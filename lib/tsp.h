@@ -6,16 +6,16 @@
 class TSP {
    public:
     static void travelling_salesman_problem(MatrixXd &Q, MatrixXd &D, int n);
-    static vector<long long> decode_solution(const VectorXd &x, bool validate);
-    static double cost_route(const MatrixXd &D, vector<long long> solution);
+    static vector<ll> decode_solution(const VectorXd &x, bool validate);
+    static double cost_route(const MatrixXd &D, vector<ll> solution);
     static double tsp_brute(const MatrixXd &D, int s = 0);
     static bool is_acceptable(const VectorXd &x);
 
    private:
-    static void add_cost_objective(map<pair<long long, long long>, double> &qubo, const MatrixXd &D, double cost_constant, int n);
-    static void add_time_constraints(map<pair<long long, long long>, double> &qubo, double constraint_constant, int n);
-    static void add_position_constraints(map<pair<long long, long long>, double> &qubo, double constraint_constant, int n);
-    static void to_MatrixXd(MatrixXd &Q, const map<pair<long long, long long>, double> &qubo);
+    static void add_cost_objective(map<pair<ll, ll>, double> &qubo, const MatrixXd &D, double cost_constant, int n);
+    static void add_time_constraints(map<pair<ll, ll>, double> &qubo, double constraint_constant, int n);
+    static void add_position_constraints(map<pair<ll, ll>, double> &qubo, double constraint_constant, int n);
+    static void to_MatrixXd(MatrixXd &Q, const map<pair<ll, ll>, double> &qubo);
 };
 
 #endif

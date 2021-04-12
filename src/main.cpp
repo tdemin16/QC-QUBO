@@ -57,12 +57,10 @@ QAP::y
     penalty
 */
 
-#define IT 4  // Algorithm iteration
+#define IT 100  // Algorithm iteration
 #define N 10
-#define K 5       // Number of measurements per problem
-#define RANGE 1000000
-#define LOG true  // Log true/false
-#define LOG_FILE true
+#define K 5  // Number of measurements per problem
+#define RANGE 5
 
 int main() {
     string filename = to_string(time(0));
@@ -75,14 +73,13 @@ int main() {
     ll c = NPP::number_partitioning_problem(Q, nums, RANGE);
 
     VectorXd x(N);
-    x = solve(Q, IT, BINARY, K, LOG, LOG_FILE, filename);
+    x = solve(Q, IT, K, LOG_CONSOLE, filename);
 
     auto end = chrono::steady_clock::now();  // end timer
     chrono::duration<double> difference = end - start;
 
     cout << endl
          << difference.count() << "s" << endl;
-
 
     ll diff = NPP::diff(Q, x, c);
 

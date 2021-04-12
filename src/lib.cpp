@@ -10,14 +10,9 @@ uniform_real_distribution<double> d_real_uniform;
 pid_t child_pid;
 int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, string filename) {
+VectorXd solve(MatrixXd Q, int imax, int k, short logs, string filename) {
     //Init
     int n = Q.outerSize();  // Get number of vaiables
-
-    if (mode != BINARY && mode != SPIN) {
-        cout << "[Warning] mode must be 0 or 1" << endl;
-        exit(1);
-    }
 
 #ifdef SIMULATION
     if (n > 64) {
@@ -25,6 +20,12 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
         exit(1);
     }
 #endif
+
+    //logs
+    bool log_console;
+    bool log_file;
+    logs % 2 == 0 ? log_console = false : log_console = true;
+    (logs >> 1) % 2 == 0 ? log_file = false : log_file = true;
 
     /*---------------------------
         fd[READ] child read
@@ -43,7 +44,7 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
     child_pid = fork();
 
     if (child_pid == 0) {
-        init_child(mode, k);
+        init_child(k);
     } else if (child_pid == -1) {
         cout << "[FORK ERROR - CLOSING]" << endl;
         exit(4);
@@ -93,8 +94,8 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
     bool simul_ann;
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
-    string file_log = "../out/tmp-" + filename + ".txt";  // Temporary log file output
     string problem = "../out/prob-" + filename + ".txt";  // Temporary problem file
+    string file_log = "../out/tmp-" + filename + ".txt";
     ofstream out_file;
 
     if (log_file) {
@@ -117,13 +118,13 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
 
 #ifdef SIMULATION
     cout << "Computing min of Q" << endl;
-    double minimum = compute_Q(Q, mode);  // Global minimum of Q, only for simulation pourposes
+    double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
 
     cout << "Computing z1" << endl;
-    z1 = map_back(min_energy(theta1, mode), perm1);
+    z1 = map_back(min_energy(theta1), perm1);
 
     cout << "Computing z2" << endl;
-    z2 = map_back(min_energy(theta2, mode), perm2);
+    z2 = map_back(min_energy(theta2), perm2);
 #else
     cout << "Computing z1" << endl;
     z1 = map_back(send_to_annealer(theta1, n), perm1);
@@ -183,12 +184,12 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
 
         theta_first = g_strong(Q_first, nodes, edges, perm, perm_star, p);
 #ifdef SIMULATION
-        z_first = map_back(min_energy(theta_first, mode), perm);
+        z_first = map_back(min_energy(theta_first), perm);
 #else
         z_first = map_back(send_to_annealer(theta_first, n), perm);
 #endif
         if (d_real_uniform(e_uniform_pert) <= q) {
-            h(z_first, p, mode);  // possibly perturb the candidate
+            h(z_first, p);  // possibly perturb the candidate
             perturbed = true;
         }
 
@@ -241,18 +242,18 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
         }
 
 #ifdef SIMULATION
-        if (logs) log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, file_log, log_file);
+        log(Q, z_star, f_star, minimum, f_gold, lambda, p, e, d, perturbed, simul_ann, i, imax, filename, logs);
 #else
-        if (logs) log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, imax, filename, log_file);
+        log(z_star, f_star, f_gold, lambda, p, e, d, perturbed, simul_ann, i, imax, filename, logs);
 #endif
         end = chrono::steady_clock::now();
         chrono::duration<double> diff = end - start;
-        if (logs) {
+        if (log_console) {
             cout << endl
                  << diff.count() << "s" << endl
                  << endl;
         }
-        
+
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
 
@@ -265,9 +266,11 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
     close(fd[READ + 2]);
     close(fd[WRITE + 2]);
 
-    if (logs) {
+    if (log_file) {
         remove(file_log.c_str());
         remove(problem.c_str());
+    }
+    if (log_console) {
         printf("pmin:%f\teta:%f\tq:%f\tlambda0:%f\tN:%d\n", pmin, eta, q, lambda0, N);
         printf("k:%d\n", k);
         printf("imax:%d, Nmax:%d, dmin:%d\n", imax, Nmax, dmin);
@@ -289,21 +292,18 @@ VectorXd solve(MatrixXd Q, int imax, int mode, int k, bool logs, bool log_file, 
     return z_gold;
 }
 
-void init_child(int mode, int k) {
+void init_child(int k) {
     char first[20];
     char second[16];
-    char third[3];
-    char fourth[30];
+    char third[30];
     memset(first, '\0', sizeof(char) * 20);
     memset(second, '\0', sizeof(char) * 16);
-    memset(third, '\0', sizeof(char) * 3);
-    memset(fourth, '\0', sizeof(char) * 30);
+    memset(third, '\0', sizeof(char) * 30);
     sprintf(first, "python3");
     sprintf(second, "../solver.py");
-    sprintf(third, "%d", mode);
-    sprintf(fourth, "%d", k);
+    sprintf(third, "%d", k);
 
-    char *args[] = {first, second, third, fourth, NULL};
+    char *args[] = {first, second, third, NULL};
 
     dup2(fd[READ], STDIN_FILENO);        // Change child's stdin
     dup2(fd[WRITE + 2], STDOUT_FILENO);  // Change child's stdout
@@ -425,7 +425,7 @@ SparseMatrix<double> g_strong(const MatrixXd &Q, const unordered_map<int, int> &
     SparseMatrix<double> theta(edges.outerSize(), edges.outerSize());
     vector<int> inversed(n);
     vector<Triplet<double>> t;
-    t.reserve(11 * n);  // A = (V, E) => |t| = |E| + |V|
+    t.reserve(16 * n);  // A = (V, E) => |t| = |E| + |V|
     int r, c;
     double val;
 
@@ -545,11 +545,9 @@ VectorXd send_to_annealer(const SparseMatrix<double> &theta, int n) {
 }
 #endif
 
-void h(VectorXd &z, double pr, int mode) {
-    int n = z.size();
-
-    for (int i = 0; i < n; i++) {
-        if (d_real_uniform(e_uniform_h) <= pr) mode == SPIN ? z(i) = -z(i) : z(i) = (int)(z(i) + 1) % 2;
+void h(VectorXd &z, double pr) {
+    for (int i = 0; i < z.size(); i++) {
+        if (d_real_uniform(e_uniform_h) <= pr) z(i) = (int)(z(i) + 1) % 2;
     }
 }
 
@@ -560,20 +558,20 @@ double min(double lambda0, int i, int e) {
     return lambda_first;
 }
 
-VectorXd min_energy(const SparseMatrix<double> &theta, int mode) {
+VectorXd min_energy(const SparseMatrix<double> &theta) {
     int n = theta.outerSize();
     unsigned long long N = pow(2, n);  // Overflow with n > 64, not a problem since is a simulation
     VectorXd x_min(n);
     VectorXd x(n);
     double min;
     double e;
-    for (int i = 0; i < n; i++) x(i) = mode;
+    for (int i = 0; i < n; i++) x(i) = 0;
 
     min = E(theta, x);
     x_min = x;
     unsigned long long i = 1;
     do {
-        increment(x, mode);
+        increment(x);
         e = E(theta, x);
         if (e < min) {
             x_min = x;
@@ -600,11 +598,11 @@ double E(const SparseMatrix<double> &theta, VectorXd x) {
     return e;
 }
 
-void increment(VectorXd &v, int mode) {  // O(1) per l'analisi ammortizzata
+void increment(VectorXd &v) {  // O(1) per l'analisi ammortizzata
     int n = v.size();
     int i = 0;
     while (i < n && v(i) == 1) {
-        v(i) = mode;
+        v(i) = 0;
         i++;
     }
     if (i < n) v(i) = 1;
@@ -645,19 +643,19 @@ void close_child() {
 }
 
 #ifdef SIMULATION
-double compute_Q(const MatrixXd &Q, int mode) {
+double compute_Q(const MatrixXd &Q) {
     int n = Q.outerSize();
     VectorXd x_min(n);
     VectorXd x(n);
     unsigned long long N = pow(2, n);
     double min, e;
-    for (int i = 0; i < n; i++) x(i) = mode;
+    for (int i = 0; i < n; i++) x(i) = 0;
 
     min = fQ(Q, x);
     x_min = x;
     unsigned long long i = 1;
     do {
-        increment(x, mode);
+        increment(x);
         e = fQ(Q, x);
         if (e <= min) {
             x_min = x;
@@ -668,19 +666,19 @@ double compute_Q(const MatrixXd &Q, int mode) {
     return min;
 }
 
-VectorXd compute_Q_vector(const MatrixXd &Q, int mode) {
+VectorXd compute_Q_vector(const MatrixXd &Q) {
     int n = Q.outerSize();
     VectorXd x_min(n);
     VectorXd x(n);
     unsigned long long N = pow(2, n);
     double min, e;
-    for (int i = 0; i < n; i++) x(i) = mode;
+    for (int i = 0; i < n; i++) x(i) = 0;
 
     min = fQ(Q, x);
     x_min = x;
     unsigned long long i = 1;
     do {
-        increment(x, mode);
+        increment(x);
         e = fQ(Q, x);
         if (e <= min) {
             x_min = x;
@@ -691,50 +689,74 @@ VectorXd compute_Q_vector(const MatrixXd &Q, int mode) {
     return x_min;
 }
 
-void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, string filename, bool log_file) {
+void log(const MatrixXd &Q, const VectorXd &z_star, double f_star, double min, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, short logs) {
     ofstream out_file;
     stringstream ss;
-    ss << z_star.transpose();
-    string out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tz*=" + ss.str() + "\n" + "To reach: min=" + to_string(min) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
+    string out;
+    string tmp_file;
+    string file_log;
 
-    if (perturbed) out += "\tperturbed";
-    if (simul_ann) out += "\tsimulated annealing";
+    if (logs) {
+        ss << z_star.transpose();
+        out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tz*=" + ss.str() + "\n" + "To reach: min=" + to_string(min) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
+        if (perturbed) out += "\tperturbed";
+        if (simul_ann) out += "\tsimulated annealing";
+    }
 
-    cout << out;
-    if (log_file) {
+    if (logs % 2 != 0) {
+        cout << out;
+    }
+
+    if ((logs >> 1) % 2 != 0) {
+        tmp_file = "../out/tmp-" + filename + ".txt";
+        file_log = "../out/" + filename + ".txt";
         ss.str("");
         ss << Q;
         out += "\n" + ss.str();
-        out_file.open(filename);
+        out_file.open(tmp_file);
         out_file << out;
         out_file.close();
+        int par = imax / 4;
+        if (i % par == 0) {
+            out_file.open(file_log, ios_base::app);
+            out_file << out + "\n";
+            out_file.close();
+        }
     }
 }
 #else
-void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, bool log_file) {
+void log(const VectorXd &z_star, double f_star, double f_gold, double lambda, double p, int e, int d, bool perturbed, bool simul_ann, int i, int imax, string filename, short logs) {
     ofstream out_file;
     stringstream ss;
-    string out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
-    string tmp_file = "../out/tmp-" + filename + ".txt";
-    string file_log = "../out/" + filename + ".txt";
+    string out;
+    string tmp_file;
+    string file_log;
 
-    if (perturbed) out += "\tperturbed";
-    if (simul_ann) out += "\tsimulated annealing";
+    if (logs) {
+        out = "---Current status at " + to_string(i) + "th iteration---\n" + "f*=" + to_string(f_star) + "\tf_gold=" + to_string(f_gold) + "\n" + "λ=" + to_string(lambda) + "\tp=" + to_string(p) + "\te=" + to_string(e) + "\td=" + to_string(d);
+        if (perturbed) out += "\tperturbed";
+        if (simul_ann) out += "\tsimulated annealing";
+    }
 
-    cout << out;
+    if (logs % 2 != 0) {
+        cout << out;
+    }
 
-    if (log_file) {
+    if ((logs >> 1) % 2 != 0) {
+        tmp_file = "../out/tmp-" + filename + ".txt";
+        file_log = "../out/" + filename + ".txt";
         ss << z_star.transpose();
         out += "\n" + ss.str();
         out_file.open(tmp_file);
         out_file << out;
         out_file.close();
-    }
-    int par = imax / 4;
-    if (i % par == 0) {
-        out_file.open(file_log, ios_base::app);
-        out_file << out + "\n";
-        out_file.close();
+
+        int par = imax / 4;
+        if (i % par == 0) {
+            out_file.open(file_log, ios_base::app);
+            out_file << out + "\n";
+            out_file.close();
+        }
     }
 }
 #endif
