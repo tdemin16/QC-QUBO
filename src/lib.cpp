@@ -94,6 +94,10 @@ VectorXd solve(MatrixXd Q, int imax, int k, short logs, string filename) {
     bool simul_ann;
     auto start = chrono::steady_clock::now();
     auto end = chrono::steady_clock::now();
+    float avg_time = -1;
+    int hours, mins, sec;
+    float h_tmp, m_tmp;
+    const float alpha = 0.95;
     string problem = "../out/prob-" + filename + ".txt";  // Temporary problem file
     string file_log = "../out/tmp-" + filename + ".txt";
     ofstream out_file;
@@ -250,9 +254,27 @@ VectorXd solve(MatrixXd Q, int imax, int k, short logs, string filename) {
         chrono::duration<double> diff = end - start;
         if (log_console) {
             cout << endl
-                 << diff.count() << "s" << endl
-                 << endl;
+                 << diff.count() << "s\t";
         }
+        if (i == 1)
+            avg_time = diff.count();
+        else
+            avg_time = avg_time * alpha + (1 - alpha) * diff.count();
+
+        h_tmp = (float)(imax - i) * avg_time / 3600;
+        hours = h_tmp;
+        m_tmp = (h_tmp - ((int)h_tmp)) * 60;
+        mins = m_tmp;
+        sec = (m_tmp - ((int)m_tmp)) * 60;
+
+        cout << "E.T.A: ";
+        if (hours < 10) cout << "0";
+        cout << hours << ":";
+        if (mins < 10) cout << "0";
+        cout << mins << ":";
+        if (sec < 10) cout << "0";
+        cout << sec << endl
+             << endl;
 
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));
