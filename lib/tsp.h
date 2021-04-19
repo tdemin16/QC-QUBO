@@ -18,7 +18,7 @@ class TSP {
     static void travelling_salesman_problem(MatrixXd &Q, const MatrixXd &D, int n);
     static vector<ll> decode_solution(const VectorXd &x, bool validate);
     static double cost_route(const MatrixXd &D, const vector<ll> &solution);
-    static double tsp_brute(const MatrixXd &D, int s = 0);
+    static vector<ll> tsp_brute(const MatrixXd &D, int s = 0);
     static bool is_acceptable(const VectorXd &x);
 
    private:

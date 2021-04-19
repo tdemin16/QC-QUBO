@@ -10,7 +10,7 @@ uniform_real_distribution<double> d_real_uniform;
 pid_t child_pid;
 int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax, int k, short logs, string filename) {
+VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
     //Init
     int n = Q.outerSize();  // Get number of vaiables
 
@@ -97,7 +97,7 @@ VectorXd solve(MatrixXd Q, int imax, int k, short logs, string filename) {
     float avg_time = -1;
     int hours, mins, sec;
     float h_tmp, m_tmp;
-    const float alpha = 0.99;
+    const float alpha = 0.80;
     string problem = "../out/prob-" + filename + ".txt";  // Temporary problem file
     string file_log = "../out/tmp-" + filename + ".txt";
     ofstream out_file;

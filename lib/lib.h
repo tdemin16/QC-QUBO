@@ -16,6 +16,7 @@
 #include <iterator>
 #include <map>
 #include <random>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -34,6 +35,7 @@ using namespace Eigen;
 #define LOG_FILE 0x02
 
 typedef long long ll;
+typedef long unsigned lu;
 
 extern mt19937_64 e_uniform_g;
 extern mt19937_64 e_uniform_h;
@@ -45,7 +47,7 @@ extern uniform_real_distribution<double> d_real_uniform;
 extern pid_t child_pid;
 extern int fd[4];
 
-VectorXd solve(MatrixXd Q, int imax = 1000, int k = 4, short logs = 0x01, string filename = to_string(time(0)));
+VectorXd solve(MatrixXd Q, int imax = 1000, int k = 4, string filename = to_string(time(0)), short logs = 0x00);
 
 void handle_sigint(int sig);
 

@@ -65,46 +65,60 @@ QAP::y
 int main() {
     const string filename = to_string(time(0));
     // Start timer
-    const auto start = chrono::steady_clock::now();
+    auto start = chrono::steady_clock::now();
 
     MatrixXd Q;  // This will contain the QUBO problem
 
-    vector<Point> points = {Point(6.72128556, 3.78364346),
-                            Point(5.79083958, 3.90574701),
-                            Point(5.8849624 , 7.81206684),
-                            Point(5.24617768, 5.25306609),
-                            Point(9.27320268, 8.78431339),
-                            Point(4.20709519, 8.69949136),
-                            Point(2.46245669, 8.24656887),
-                            Point(4.4052503 , 3.75829681),
-                            Point(7.30407378, 6.13043625),
-                            Point(8.35143241, 2.43962078)};
+    vector<Point> points = {Point(5.2225297, 1.35247657),
+                            Point(4.86286468, 6.28709366),
+                            Point(8.78986857, 3.10734201),
+                            Point(3.61426058, 5.18662112),
+                            Point(4.55953221, 4.8983644),
+                            Point(7.45013124, 4.86415109),
+                            Point(4.86195918, 5.46800789),
+                            Point(6.86853901, 4.14192507),
+                            Point(2.47284735, 3.55188943),
+                            Point(0.56978186, 6.79788568)};
 
     MatrixXd D = TSP::build_tsp(points);
 
     TSP::travelling_salesman_problem(Q, D, points.size());
 
     VectorXd x;
-    x = solve(Q, IT, K, LOG_CONSOLE | LOG_FILE, filename);
+    x = solve(Q, IT, K, filename);
 
-    const auto end = chrono::steady_clock::now();  // end timer
-    const chrono::duration<double> difference = end - start;
+    auto end = chrono::steady_clock::now();  // end timer
+    chrono::duration<double> difference = end - start;
 
     cout << endl
          << difference.count() << "s" << endl;
 
     vector<ll> solution;
     solution = TSP::decode_solution(x, true);
-    cout << "QALS solution" << endl << "QALS: [";
-    for(auto it:solution) {
-        cout << it << " ";
+    cout << "QALS solution" << endl
+         << "QALS: [";
+    for (lu it = 0; it < solution.size(); it++) {
+        cout << solution[it];
+        if (it < solution.size() - 1) cout << ", ";
     }
     cout << "] " << TSP::cost_route(D, solution) << endl;
-    cout << "Calculation time: "<< difference.count() << endl;
+    cout << "Calculation time: " << difference.count() << endl;
 
-#ifdef SIMULATION
-    cout << "BRUTE:" << TSP::tsp_brute(D) << endl;
-#endif
+    if (solution.size() <= 16) {
+        start = chrono::steady_clock::now();
+        solution = TSP::tsp_brute(D);
+        end = chrono::steady_clock::now();
+        difference = end - start;
+
+        cout << "Brute Force solution" << endl
+             << "Brute Force: [";
+        for (lu it = 0; it < solution.size(); it++) {
+            cout << solution[it];
+            if (it < solution.size() - 1) cout << ", ";
+        }
+        cout << "] " << TSP::cost_route(D, solution) << endl;
+        cout << "Calculation time: " << difference.count() << endl;
+    }
 
     return 0;
 }

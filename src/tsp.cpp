@@ -11,7 +11,7 @@ MatrixXd TSP::build_tsp(vector<Point> &points) {
     MatrixXd D(n, n);
 
     for (int i = 0; i < n; i++) {
-        D(i,i) = 0;
+        D(i, i) = 0;
         for (int j = i + 1; j < n; j++) {
             distance = sqrt(pow(points[j].x - points[i].x, 2) + pow(points[j].y - points[i].y, 2));
             D(i, j) = D(j, i) = distance;
@@ -24,7 +24,7 @@ MatrixXd TSP::build_tsp(vector<Point> &points) {
 void TSP::travelling_salesman_problem(MatrixXd &Q, const MatrixXd &D, int n) {
     map<pair<ll, ll>, double> qubo;
     Q.resize(n * n, n * n);
-    
+
     const double B = 1;
     const double A = n * D.maxCoeff();
 
@@ -98,60 +98,110 @@ void TSP::to_MatrixXd(MatrixXd &Q, const map<pair<ll, ll>, double> &qubo) {
 }
 
 vector<ll> TSP::decode_solution(const VectorXd &x, bool validate) {
-    ll n = sqrt(x.size());
-    ll last_j = -1;
-    vector<ll> solution(n, -1);
-    unordered_set<ll> all;
-    unordered_set<ll> ins;
-    unordered_set<ll> result;
-    vector<ll> sw(n, 0);
+    // Def: an unavailable node is a node that is already stored 1 or more times in the solution
+    //      that cannot be picked at random
 
-    for (ll i = 0; i < n; i++) {
-        for (ll j = 0; j < n; j++) {
-            if (x(n * i + j) == 1) {
-                solution[i] = j;
-                last_j = j;
+    int rnd;
+    ll n = sqrt(x.size());  // problem's dimension
+    ll index;
+    vector<ll> solution;  // problem solution
+    vector<ll> indexes;
+    set<ll> keep;            // unavailable nodes
+    set<ll> all;             // all nodes
+    set<ll> diff;            // nodes to insert
+    vector<set<ll>> raw(n);  // solution preprocessing
+                             // each subsequence can contain 0+ nodes
+    double last = -1;
+
+    if (!validate) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (x(n * i + j) == 1) last = j;
+            }
+            if (last != -1) solution.push_back(last);
+            last = -1;
+        }
+
+    } else {
+        // solution vector is initialize to -1
+        solution.resize(n);
+        for (lu i = 0; i < solution.size(); i++) {
+            solution[i] = -1;
+        }
+
+        // foreach subsequence, its corresponding set will contain the position of all 1s
+        // i.e. in 01100 with n = 5 -> {1, 2}
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (x(n * i + j) == 1) raw[i].insert(j);
             }
         }
-        all.insert(i);
-        if (last_j != -1) ins.insert(last_j);
-        last_j = -1;
-    }
 
-    if (validate) {
-        cout << "Solution not acceptable, validation occurred" << endl;
+        // solution[i] will get a value != 0 iff its corresponding set has 1 and only 1 value
+        // solution[i] will get that value
+        for (int i = 0; i < n; i++) {
+            if (raw[i].size() == 1) {
+                keep.insert(*(raw[i].begin()));  // keep keeps track of unavailable nodes
+                solution[i] = *(raw[i].begin());
+            }
+            all.insert(i);  // all stores all nodes
+        }
+
+        // given the set of values that were unique in their subsequence
+        // if the subsequence at position i present more than 1 element
+        // then the solution will store a random value from that set that is not present in keep
+        for (int i = 0; i < n; i++) {
+            if (raw[i].size() > 1) {
+                for (auto it : raw[i]) {
+                    if (keep.find(it) == keep.end()) {
+                        diff.insert(it);
+                    }
+                }
+                if (diff.size() > 0) {
+                    rnd = rand() % diff.size();
+                    auto it = diff.begin();
+                    advance(it, rnd);
+                    solution[i] = *it;
+                    keep.insert(*it); // update set of unavailable nodes
+                    diff.clear();
+                }
+            }
+        }
+
+        // foreach possible node, if a node is stored multiple times in the solution
+        // i.e if x = [0, 1, 0, 0,  1, 0, 0, 0,  0, 1, 0, 0] = [1, 0, 1]
+        // one of the index of the solution, picked at random, will keep its value
+        // the others will be set to -1
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (solution[j] == i) indexes.push_back(j); // vector of index that contain value i
+            }
+            if (indexes.size() > 1) {
+                random_shuffle(indexes.begin(), indexes.end());
+                index = indexes[0];
+                for (auto it : indexes) {
+                    it == index ? solution[it] = i : solution[it] = -1;
+                }
+                keep.insert(i); // update set of unavailable nodes
+            }
+            indexes.clear();
+        }
+
+        // diff = all - ins
         for (auto it : all) {
-            if (ins.find(it) == ins.end()) {
-                result.insert(it);
+            if (keep.find(it) == keep.end()) {
+                diff.insert(it);
             }
         }
 
-        auto it = result.begin();
+        // each index of solution that has a value of -1
+        // will be set to a random available value
         for (int i = 0; i < n; i++) {
             if (solution[i] == -1) {
+                auto it = diff.begin();
+                advance(it, rand() % diff.size());
                 solution[i] = *it;
-                ins.insert(*it);
-                it++;
-            }
-        }
-
-        result.clear();
-        for (auto it : all) {
-            if (ins.find(it) == ins.end()) {
-                result.insert(it);
-            }
-        }
-
-        it = result.begin();
-        if (ins.size() != all.size()) {
-            for (int i = 0; i < n; i++) {
-                if (sw[solution[i]] == 0)
-                    sw[solution[i]]++;
-                else {
-                    solution[i] = *it;
-                    sw[solution[i]]++;
-                    it++;
-                }
+                diff.erase(it); // upadate set of available nodes
             }
         }
     }
@@ -173,16 +223,18 @@ double TSP::cost_route(const MatrixXd &D, const vector<ll> &solution) {
     return cost;
 }
 
-double TSP::tsp_brute(const MatrixXd &D, int s) {
+vector<ll> TSP::tsp_brute(const MatrixXd &D, int s) {
     // store all vertex apart from source vertex
-    int n = D.outerSize();
-    vector<int> vertex;
-    for (int i = 0; i < n; i++)
+    ll n = D.outerSize();
+    vector<ll> vertex;
+    vector<ll> best;
+    for (ll i = 0; i < n; i++)
         if (i != s)
             vertex.push_back(i);
 
     // store minimum weight Hamiltonian Cycle.
     int min_path = INT_MAX;
+    int prev = INT_MAX;
     do {
         // store current Path weight(cost)
         int current_pathweight = 0;
@@ -197,10 +249,12 @@ double TSP::tsp_brute(const MatrixXd &D, int s) {
 
         // update minimum
         min_path = min(min_path, current_pathweight);
+        if (min_path < prev) best = vertex;
+        prev = min_path;
 
     } while (next_permutation(vertex.begin(), vertex.end()));
 
-    return min_path;
+    return best;
 }
 
 bool TSP::is_acceptable(const VectorXd &x) {
