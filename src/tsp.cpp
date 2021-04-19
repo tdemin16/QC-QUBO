@@ -1,21 +1,32 @@
 #include "../lib/tsp.h"
 
-void TSP::travelling_salesman_problem(MatrixXd &Q, MatrixXd &D, int n) {
-    map<pair<ll, ll>, double> qubo;
-    Q.resize(n * n, n * n);
-    D.resize(n, n);
-    srand(time(0));
+Point::Point(double x, double y) {
+    this->x = x;
+    this->y = y;
+}
+
+MatrixXd TSP::build_tsp(vector<Point> &points) {
+    int n = points.size();
+    double distance;
+    MatrixXd D(n, n);
+
     for (int i = 0; i < n; i++) {
+        D(i,i) = 0;
         for (int j = i + 1; j < n; j++) {
-            if (i != j) D(i, j) = D(j, i) = rand() % 9 + 1;
+            distance = sqrt(pow(points[j].x - points[i].x, 2) + pow(points[j].y - points[i].y, 2));
+            D(i, j) = D(j, i) = distance;
         }
     }
-    cout << D << endl;
 
+    return D;
+}
+
+void TSP::travelling_salesman_problem(MatrixXd &Q, const MatrixXd &D, int n) {
+    map<pair<ll, ll>, double> qubo;
+    Q.resize(n * n, n * n);
+    
     const double B = 1;
     const double A = n * D.maxCoeff();
-
-    cout << "A: " << A << endl;
 
     add_cost_objective(qubo, D, B, n);
     add_time_constraints(qubo, A, n);
@@ -123,7 +134,7 @@ vector<ll> TSP::decode_solution(const VectorXd &x, bool validate) {
                 it++;
             }
         }
-        
+
         result.clear();
         for (auto it : all) {
             if (ins.find(it) == ins.end()) {
@@ -148,7 +159,7 @@ vector<ll> TSP::decode_solution(const VectorXd &x, bool validate) {
     return solution;
 }
 
-double TSP::cost_route(const MatrixXd &D, vector<ll> solution) {
+double TSP::cost_route(const MatrixXd &D, const vector<ll> &solution) {
     int n = solution.size();
     ll a, b;
     double cost = 0;
@@ -203,8 +214,8 @@ bool TSP::is_acceptable(const VectorXd &x) {
         }
     }
 
-    for(auto it:count) {
-        if(it != 1) return false;
+    for (auto it : count) {
+        if (it != 1) return false;
     }
     return true;
 }

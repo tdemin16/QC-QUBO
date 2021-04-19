@@ -57,33 +57,54 @@ QAP::y
     penalty
 */
 
-#define IT 100  // Algorithm iteration
-#define N 10
+#define IT 50  // Algorithm iteration
+#define N 4
 #define K 5  // Number of measurements per problem
 #define RANGE 5
 
 int main() {
-    string filename = to_string(time(0));
+    const string filename = to_string(time(0));
     // Start timer
-    auto start = chrono::steady_clock::now();
+    const auto start = chrono::steady_clock::now();
 
     MatrixXd Q;  // This will contain the QUBO problem
-    vector<ll> nums(N);
 
-    ll c = NPP::number_partitioning_problem(Q, nums, RANGE);
+    vector<Point> points = {Point(6.72128556, 3.78364346),
+                            Point(5.79083958, 3.90574701),
+                            Point(5.8849624 , 7.81206684),
+                            Point(5.24617768, 5.25306609),
+                            Point(9.27320268, 8.78431339),
+                            Point(4.20709519, 8.69949136),
+                            Point(2.46245669, 8.24656887),
+                            Point(4.4052503 , 3.75829681),
+                            Point(7.30407378, 6.13043625),
+                            Point(8.35143241, 2.43962078)};
 
-    VectorXd x(N);
-    x = solve(Q, IT, K, LOG_CONSOLE, filename);
+    MatrixXd D = TSP::build_tsp(points);
 
-    auto end = chrono::steady_clock::now();  // end timer
-    chrono::duration<double> difference = end - start;
+    TSP::travelling_salesman_problem(Q, D, points.size());
+
+    VectorXd x;
+    x = solve(Q, IT, K, LOG_CONSOLE | LOG_FILE, filename);
+
+    const auto end = chrono::steady_clock::now();  // end timer
+    const chrono::duration<double> difference = end - start;
 
     cout << endl
          << difference.count() << "s" << endl;
 
-    ll diff = NPP::diff(Q, x, c);
+    vector<ll> solution;
+    solution = TSP::decode_solution(x, true);
+    cout << "QALS solution" << endl << "QALS: [";
+    for(auto it:solution) {
+        cout << it << " ";
+    }
+    cout << "] " << TSP::cost_route(D, solution) << endl;
+    cout << "Calculation time: "<< difference.count() << endl;
 
-    NPP::to_file(difference, IT, fQ(Q, x), N, RANGE, diff, x, nums, filename);
+#ifdef SIMULATION
+    cout << "BRUTE:" << TSP::tsp_brute(D) << endl;
+#endif
 
     return 0;
 }

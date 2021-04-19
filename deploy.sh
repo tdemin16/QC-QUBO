@@ -1,4 +1,4 @@
-BUILD="g++ -std=c++2a -o3 -m64 -I/usr/include/python3.8 -fopenmp -Wall -Wextra ./src/main.cpp ./src/lib.cpp ./src/npp.cpp ./src/qap.cpp ./src/tsp.cpp -o ./bin/main"
+BUILD="g++ -std=c++2a -o3 -m64 -g -fsanitize=address -fopenmp -Wall -Wextra ./src/main.cpp ./src/lib.cpp ./src/npp.cpp ./src/qap.cpp ./src/tsp.cpp -o ./bin/main"
 
 if [ ! -d "./bin" ]; then \
 	mkdir ./bin; 
