@@ -59,8 +59,8 @@ VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
     const double pmin = 0.1;   // minimum probability 0 < pδ < 0.5 of permutation modification
     const double eta = 0.02f;  // probability decreasing rate η > 0
     const double q = 0.2f;     // candidate perturbation probability q > 0
-    const double lambda0 = 0;  //3 / 2;  // initial balancing factor λ0 > 0
-    const int N = imax;        // Decreasing time
+    const double lambda0 = 3 / 2;  // initial balancing factor λ0 > 0
+    const int N = 5;        // Decreasing time
 
     //Termination Parameters
     const int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
