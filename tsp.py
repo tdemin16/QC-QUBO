@@ -177,6 +177,7 @@ def main(n):
 
     qubo = dict()
     nodes_array = create_nodes_array(n)
+    print(nodes_array, "\n")
     tsp_matrix = get_tsp_matrix(nodes_array)
 
     constraint_constant = tsp_matrix.max()*len(tsp_matrix)
@@ -193,7 +194,6 @@ def main(n):
     solution = decode_solution(tsp_matrix, solution, True)
     cost = calculate_cost(tsp_matrix, solution)
 
-    print(nodes_array, "\n")
     print("D-Wave solution")
     print("D-Wave:", solution, cost)
     print("Calculation time:", end - start)

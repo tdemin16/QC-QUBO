@@ -58,9 +58,7 @@ QAP::y
 */
 
 #define IT 50  // Algorithm iteration
-#define N 4
 #define K 5  // Number of measurements per problem
-#define RANGE 5
 
 int main() {
     const string filename = to_string(time(0));
