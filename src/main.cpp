@@ -57,7 +57,7 @@ QAP::y
     penalty
 */
 
-#define IT 50  // Algorithm iteration
+#define IT 150  // Algorithm iteration
 #define K 5  // Number of measurements per problem
 
 int main() {
@@ -67,23 +67,23 @@ int main() {
 
     MatrixXd Q;  // This will contain the QUBO problem
 
-    vector<Point> points = {Point(5.2225297, 1.35247657),
-                            Point(4.86286468, 6.28709366),
-                            Point(8.78986857, 3.10734201),
-                            Point(3.61426058, 5.18662112),
-                            Point(4.55953221, 4.8983644),
-                            Point(7.45013124, 4.86415109),
-                            Point(4.86195918, 5.46800789),
-                            Point(6.86853901, 4.14192507),
-                            Point(2.47284735, 3.55188943),
-                            Point(0.56978186, 6.79788568)};
+    vector<Point> points = {Point(7.21362447, 4.72776071),
+                            Point(7.48093569, 8.15635289),
+                            Point(9.72339245, 7.86815924),
+                            Point(2.68741026, 2.43794644),
+                            Point(6.86692814, 2.86802978),
+                            Point(8.11962058, 4.72617735),
+                            Point(9.66730978, 1.6601765 ),
+                            Point(0.48265261, 9.97703727),
+                            Point(4.85291697, 3.57640542),
+                            Point(4.64010762, 0.77011666)};
 
     MatrixXd D = TSP::build_tsp(points);
 
     TSP::travelling_salesman_problem(Q, D, points.size());
 
     VectorXd x;
-    x = solve(Q, IT, K, filename);
+    x = solve(Q, IT, K, filename, LOG_CONSOLE);
 
     auto end = chrono::steady_clock::now();  // end timer
     chrono::duration<double> difference = end - start;
