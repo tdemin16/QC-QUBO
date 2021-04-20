@@ -68,6 +68,14 @@ def solve_tsp(qubo_dict, k):
     return response.first.sample.values()
 
 
+def run_hybrid(theta):
+    sampler = LeapHybridSampler()
+    response = sampler.sample_qubo(theta)
+    response = response.first.sample.values()
+
+    return response
+
+
 def decode_solution(tsp_matrix, response, validate=True):
     n = len(tsp_matrix)
     solution = []
@@ -199,8 +207,41 @@ def main(n):
     print("Calculation time:", end - start)
 
 
+def main_hybrid():
+    nodes_array = [
+        [7.21362447, 4.72776071],
+        [7.48093569, 8.15635289],
+        [9.72339245, 7.86815924],
+        [2.68741026, 2.43794644],
+        [6.86692814, 2.86802978],
+        [8.11962058, 4.72617735],
+        [9.66730978, 1.6601765],
+        [0.48265261, 9.97703727],
+        [4.85291697, 3.57640542],
+        [4.64010762, 0.77011666]
+    ]
+
+    qubo = dict()
+    tsp_matrix = get_tsp_matrix(nodes_array)
+    constraint_constant = tsp_matrix.max()*len(tsp_matrix)
+    cost_constant = 1
+
+    add_cost_objective(tsp_matrix, cost_constant, qubo)
+    add_time_constraints(tsp_matrix, constraint_constant, qubo)
+    add_position_constraints(tsp_matrix, constraint_constant, qubo)
+
+    start = time()
+    solution = run_hybrid(qubo)
+    end = time()
+
+    solution = decode_solution(tsp_matrix, solution, True)
+    cost = calculate_cost(tsp_matrix, solution)
+
+    print("Hybrid solution")
+    print("Hybrid: ", solution, cost)
+    print("Calculation time:", end - start)
+
+
+
 if __name__ == "__main__":
-    try:
-        main(int(sys.argv[1]))
-    except IndexError:
-        main(int(input("Insert n: ")))
+    main_hybrid()
