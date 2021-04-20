@@ -111,13 +111,7 @@ Calculation time: 23.5555
 ---
 
 # Fourth
-n = 12 which is the maximum dimension for embedding.
-$$
-    12^2 = 144 \qquad \text{dimension of QUBO matrix}
-$$
-$$
-    \frac{144^2}{4} = 5184 \qqad \text{qbits required for the embedding}
-$$
+n = 12 which is the maximum dimension for embedding. 12^2 = 144 dimension of QUBO matrix -> 144^2 / 4 = 5184 qbits required for the embedding
 
 |     x    |     y     |
 |----------|-----------|
