@@ -236,7 +236,7 @@ def main(n):
     solution = run_hybrid(qubo)
     end = time()
 
-    solution = decode_solution(tsp_matrix, solution, True)
+    solution = decode_solution(solution, True)
     cost = calculate_cost(tsp_matrix, solution)
 
     print("Hybrid solution")
@@ -248,7 +248,7 @@ def main(n):
     solution = solve_tsp(qubo, k)
     end = time()
 
-    solution = decode_solution(tsp_matrix, solution, True)
+    solution = decode_solution(solution, True)
     cost = calculate_cost(tsp_matrix, solution)
 
     print("D-Wave solution")
