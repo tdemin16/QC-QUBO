@@ -1,3 +1,4 @@
+﻿
 # First
 Test conducted by removing the tabu matrix and mantaining the probability of permutation = 1.
 
@@ -14,19 +15,17 @@ Test conducted by removing the tabu matrix and mantaining the probability of per
 |4.85291697| 3.57640542|
 |4.64010762| 0.77011666|
 
----
-
 ## Brute Force solution
-Brute Force: [5, 2, 1, 7, 3, 9, 8, 4, 6] 34.8762\
+Brute Force: [0, 2, 1, 7, 3, 9, 8, 4, 6, 5] 36.2746 \
 Calculation time: 0.475904
 
----
-
 ## D-Wave solution
-D-Wave: [2, 1, 4, 3, 9, 0, 6, 5, 7, 8] 49.947659879310976\
+D-Wave: [2, 1, 4, 3, 9, 0, 6, 5, 7, 8] 49.947659879310976 \
 Calculation time: 117.91059374809265
 
----
+## Hybrid solution
+Hybrid: [2, 1, 7, 3, 4, 8, 9, 6, 0, 5] 39.96508710124576 \
+Calculation time: 17.37695550918579
 
 ## QALS solution
 QALS: [9, 4, 5, 2, 6, 3, 1, 0, 8, 7] 53.439\
@@ -37,8 +36,6 @@ Calculation time: 78.8585
 
 QALS: [6, 2, 7, 5, 1, 9, 4, 3, 8, 0] 52.6196\
 Calculation time: 88.2038
-
----
 
 # Second
 Restored tabu search with $\lambda_0 = 3 / 2$ and N = 5.
@@ -56,19 +53,17 @@ Restored tabu search with $\lambda_0 = 3 / 2$ and N = 5.
 |7.03554598| 3.29164378|
 |8.70281554| 9.5195283 |
 
----
-
 ## Brute Force solution
-Brute Force: [5, 2, 1, 7, 3, 9, 8, 4, 6] 34.8762 \
+Brute Force: [0, 5, 9, 2, 4, 7, 1, 6, 3, 8] 30.7255 \
 Calculation time: 0.519616
-
----
 
 ## D-Wave solution
 D-Wave: [6, 9, 8, 7, 2, 5, 1, 0, 4, 3] 55.633240896012566 \
 Calculation time: 115.58193039894104
 
----
+## Hybrid solution
+Hybrid: [4, 2, 9, 5, 8, 0, 7, 1, 6, 3] 31.256196933482386 \
+Calculation time: 16.84376621246338
 
 ## QALS solution
 QALS: [6, 2, 7, 5, 1, 9, 4, 3, 8, 0] 52.6196 \
@@ -76,8 +71,6 @@ Calculation time: 88.2038
 
 QALS: [9, 0, 6, 4, 3, 7, 2, 5, 1, 8] 48.345 \
 Calculation time: 57.9059
-
----
 
 # Third
 Test with n = 5 and same conditions of the second test
@@ -90,28 +83,31 @@ Test with n = 5 and same conditions of the second test
 |4.48992494| 7.32524818|
 |4.71858654| 6.57472467|
 
----
-
 ## Brute Force solution
-Brute Force: [1, 3, 4, 2] 14.2491 \
+Brute Force: [0, 1, 4, 3, 2] 18.0643 \
 Calculation time: 6.1767e-05
-
----
 
 ## D-Wave solution
 D-Wave: [2, 3, 4, 1, 0] 18.064270687463058 \
 Calculation time: 4.9984002113342285
 
----
+## Hybrid solution
+Hybrid: [1, 4, 3, 2, 0] 18.064270688232963 \
+Calculation time: 16.947219610214233
 
 ## QALS solution
 QALS: [4, 0, 1, 2, 3] 22.7656 \
 Calculation time: 23.5555
 
----
 
 # Fourth
-n = 12 which is the maximum dimension for embedding. 12^2 = 144 dimension of QUBO matrix -> 144^2 / 4 = 5184 qbits required for the embedding
+n = 12 which is the maximum dimension for embedding. 
+$$
+	12^2 = 144 \qquad \text{dimension of QUBO matrix}
+$$
+$$
+	\frac{144^2}{4} = 5184 \qquad \text{number of qubits required for embedding}
+$$
 
 |     x    |     y     |
 |----------|-----------|
@@ -128,19 +124,17 @@ n = 12 which is the maximum dimension for embedding. 12^2 = 144 dimension of QUB
 |3.81010642| 7.63817388|
 |4.45345072| 4.45003767|
 
----
-
 ## Brute Force solution
-Brute Force: [5, 8, 11, 1, 9, 2, 6, 3, 4, 7, 10] 25.9258 \
+Brute Force: [0, 5, 8, 11, 1, 9, 2, 6, 3, 4, 7, 10] 30.5361 \
 Calculation time: 62.0376
-
----
 
 ## D-Wave solution
 D-Wave: [0, 8, 2, 7, 11, 9, 5, 6, 10, 4, 3, 1] 68.84281051637674 \
 Calculation time: 179.92916774749756
 
----
+## Hybrid solution
+Hybrid: [4, 3, 6, 9, 2, 10, 0, 5, 8, 1, 11, 7] 40.20793498986772
+Calculation time: 8.500251531600952
 
 ## QALS solution
 QALS: [11, 0, 3, 2, 10, 9, 5, 8, 7, 6, 4, 1] 71.5469 \
@@ -148,3 +142,4 @@ Calculation time: 59.7533
 
 QALS: [4, 1, 2, 9, 6, 0, 11, 10, 3, 7, 5, 8] 56.0611 \
 Calculation time: 115.613
+

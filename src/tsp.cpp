@@ -233,11 +233,11 @@ vector<ll> TSP::tsp_brute(const MatrixXd &D, int s) {
             vertex.push_back(i);
 
     // store minimum weight Hamiltonian Cycle.
-    int min_path = INT_MAX;
-    int prev = INT_MAX;
+    double min_path = __DBL_MAX__;
+    double prev = __DBL_MAX__;
     do {
         // store current Path weight(cost)
-        int current_pathweight = 0;
+        double current_pathweight = 0;
 
         // compute current path weight
         int k = s;
@@ -253,6 +253,9 @@ vector<ll> TSP::tsp_brute(const MatrixXd &D, int s) {
         prev = min_path;
 
     } while (next_permutation(vertex.begin(), vertex.end()));
+
+    auto it = best.begin();
+    best.insert(it, s);
 
     return best;
 }
