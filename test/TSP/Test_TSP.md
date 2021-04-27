@@ -144,74 +144,72 @@ QALS: [4, 1, 2, 9, 6, 0, 11, 10, 3, 7, 5, 8] 56.0611 \
 Calculation time: 115.613
 
 
-###NUOVI TEST
+# Fifth
+n = 12 with mutliple run for each approach
 
-[[9.94842154 7.98192104]
- [8.60849611 8.00248268]
- [7.7510664  8.92952639]
- [2.48323566 7.71263975]
- [0.79106925 4.7339348 ]
- [5.43068116 8.76787367]
- [2.01200685 7.57374064]
- [8.24493747 4.47630442]
- [6.12997546 7.6483757 ]
- [5.42759893 6.52504111]
- [1.19438987 6.82360516]
- [5.30828759 3.38905631]] 
+|     x    |     y     |
+|----------|-----------|
+|9.94842154| 7.98192104|
+|8.60849611| 8.00248268|
+|7.7510664 | 8.92952639|
+|2.48323566| 7.71263975|
+|0.79106925| 4.7339348 |
+|5.43068116| 8.76787367|
+|2.01200685| 7.57374064|
+|8.24493747| 4.47630442|
+|6.12997546| 7.6483757 |
+|5.42759893| 6.52504111|
+|1.19438987| 6.82360516|
+|5.30828759| 3.38905631|
 
-Hybrid solution
-Hybrid:  [ 6  3  8  9  0  1  2  7 11  4 10  5] 35.55181818926448
-Calculation time: 14.736042976379395
-D-Wave solution
-D-Wave: [ 1 10  0  6  9  7 11  4  5  3  8  2] 55.44057099593448
-Calculation time: 102.12452530860901
-QALS solution
-QALS: [7, 11, 6, 0, 8, 4, 10, 5, 9, 3, 1, 2] 50.4034
-Calculation time: 114.316
-Brute Force solution
-Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198
+# Brute Force solution
+Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198 \
 Calculation time: 58.8898
 
-#2
-Hybrid solution
-Hybrid:  [ 6 10  3  5  9  1  8  2  0  7 11  4] 33.35232386675365
-Calculation time: 15.023589849472046
-D-Wave solution
-D-Wave: [ 6  1  5 10 11  7  8  9  4  3  2  0] 52.310869978624545
-Calculation time: 159.7624580860138
-QALS solution
-QALS: [5, 0, 9, 8, 7, 10, 2, 3, 6, 11, 1, 4] 60.3087
-Calculation time: 114.775
-Brute Force solution
-Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198
+Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198 \
 Calculation time: 57.4762
 
-#3
-Hybrid solution
-Hybrid:  [ 9  8  1  2  0  7 11  5 10  3  6  4] 34.67329723130918
-Calculation time: 14.903441905975342
-D-Wave solution
-D-Wave: [ 4  7  3 11  2  5 10  6  8  9  0  1] 53.38985153698601
-Calculation time: 137.01140928268433
-QALS solution
-QALS: [2, 4, 11, 6, 0, 5, 7, 3, 9, 10, 1, 8] 61.9356
-Calculation time: 115.906
-Brute Force solution
-Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198
+Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198 \
 Calculation time: 55.7427
 
-#4
-QALS solution
-QALS: [2, 5, 1, 4, 7, 8, 0, 9, 3, 10, 6, 11] 51.1538
-Calculation time: 112.663
-Brute Force solution
-Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198
+Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198 \
 Calculation time: 58.055
 
-#5
-QALS solution
-QALS: [10, 0, 6, 3, 5, 1, 7, 8, 2, 11, 4, 9] 53.0739
-Calculation time: 112.203
-Brute Force solution
-Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198
+Brute Force: [0, 1, 2, 5, 8, 9, 3, 6, 10, 4, 11, 7] 26.2198 \
 Calculation time: 56.9255
+
+## Hybrid solution
+Hybrid:  [ 6  3  8  9  0  1  2  7 11  4 10  5] 35.55181818926448 \
+Calculation time: 14.736042976379395
+
+Hybrid:  [ 6 10  3  5  9  1  8  2  0  7 11  4] 33.35232386675365 \
+Calculation time: 15.023589849472046
+
+Hybrid:  [ 9  8  1  2  0  7 11  5 10  3  6  4] 34.67329723130918 \
+Calculation time: 14.903441905975342
+
+## D-Wave solution
+D-Wave: [ 1 10  0  6  9  7 11  4  5  3  8  2] 55.44057099593448 \
+Calculation time: 102.12452530860901
+
+D-Wave: [ 6  1  5 10 11  7  8  9  4  3  2  0] 52.310869978624545 \
+Calculation time: 159.7624580860138
+
+D-Wave: [ 4  7  3 11  2  5 10  6  8  9  0  1] 53.38985153698601 \
+Calculation time: 137.01140928268433
+
+## QALS solution
+QALS: [7, 11, 6, 0, 8, 4, 10, 5, 9, 3, 1, 2] 50.4034 \
+Calculation time: 114.316
+
+QALS: [5, 0, 9, 8, 7, 10, 2, 3, 6, 11, 1, 4] 60.3087 \
+Calculation time: 114.775
+
+QALS: [2, 4, 11, 6, 0, 5, 7, 3, 9, 10, 1, 8] 61.9356 \
+Calculation time: 115.906
+
+QALS: [2, 5, 1, 4, 7, 8, 0, 9, 3, 10, 6, 11] 51.1538 \
+Calculation time: 112.663
+
+QALS: [10, 0, 6, 3, 5, 1, 7, 8, 2, 11, 4, 9] 53.0739 \
+Calculation time: 112.203
