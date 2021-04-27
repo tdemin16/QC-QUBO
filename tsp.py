@@ -67,7 +67,7 @@ def add_position_constraints(distance_matrix, constraint_constant, qubo_dict):
 def solve_tsp(qubo_dict, k):
     response = EmbeddingComposite(DWaveSampler()).sample_qubo(
         qubo_dict, chain_strength=800, num_reads=k)
-    return response.first.sample.values()
+    return list(response.first.sample.values())
 
 
 def run_hybrid(theta):
@@ -75,7 +75,7 @@ def run_hybrid(theta):
     response = sampler.sample_qubo(theta)
     response = response.first.sample.values()
 
-    return response
+    return list(response)
 
 
 def advance(iter, rnd):

@@ -67,18 +67,16 @@ int main() {
 
     MatrixXd Q;  // This will contain the QUBO problem
 
-    vector<Point> points = {Point(8.8580261 , 9.19800721),
-                            Point(3.58473975, 1.65934421),
-                            Point(4.6050223 , 0.72658109),
-                            Point(0.01825975, 3.78999345),
-                            Point(0.16127204, 5.97264417),
-                            Point(7.03489676, 7.40024074),
-                            Point(0.86655297, 0.49004868),
-                            Point(0.35013547, 7.08491828),
-                            Point(7.02722521, 5.99131315),
-                            Point(4.32180413, 1.06361234),
-                            Point(3.81010642, 7.63817388),
-                            Point(4.45345072, 4.45003767)};
+    vector<Point> points = {Point(7.21362447, 4.72776071),
+                            Point(7.48093569, 8.15635289),
+                            Point(9.72339245, 7.86815924),
+                            Point(2.68741026, 2.43794644),
+                            Point(6.86692814, 2.86802978),
+                            Point(8.11962058, 4.72617735),
+                            Point(9.66730978, 1.6601765 ),
+                            Point(0.48265261, 9.97703727),
+                            Point(4.85291697, 3.57640542),
+                            Point(4.64010762, 0.77011666)};
 
     MatrixXd D = TSP::build_tsp(points);
 
@@ -107,6 +105,7 @@ int main() {
     if (solution.size() <= 16) {
         start = chrono::steady_clock::now();
         solution = TSP::tsp_brute(D);
+
         end = chrono::steady_clock::now();
         difference = end - start;
 
