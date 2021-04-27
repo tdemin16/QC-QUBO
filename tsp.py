@@ -217,7 +217,7 @@ def distance(point_A, point_B):
     return np.sqrt((point_A[0] - point_B[0])**2 + (point_A[1] - point_B[1])**2)
 
 
-def main(n):
+def main(n, old):
     k = 1000
 
     qubo = dict()
