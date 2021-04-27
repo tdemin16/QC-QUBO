@@ -213,3 +213,29 @@ Calculation time: 112.663
 
 QALS: [10, 0, 6, 3, 5, 1, 7, 8, 2, 11, 4, 9] 53.0739 \
 Calculation time: 112.203
+
+
+#6
+QALS solution
+QALS: [10, 1, 7, 11, 4, 5, 6, 9, 2, 8, 0, 3] 50.5176
+Calculation time: 122.078
+
+#7
+QALS solution
+QALS: [11, 7, 9, 2, 4, 10, 5, 1, 8, 6, 3, 0] 49.2559
+Calculation time: 157.053
+
+#8
+QALS solution
+QALS: [1, 7, 9, 11, 5, 3, 2, 0, 6, 8, 10, 4] 54.148
+Calculation time: 132.563
+
+#9
+QALS solution
+QALS: [3, 10, 2, 1, 7, 8, 4, 6, 5, 11, 9, 0] 50.6057
+Calculation time: 113.84
+
+#10
+QALS solution
+QALS: [1, 8, 0, 2, 5, 3, 4, 10, 6, 7, 9, 11] 40.1041
+Calculation time: 141.05
