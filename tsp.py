@@ -221,7 +221,23 @@ def main(n):
     k = 1000
 
     qubo = dict()
-    nodes_array = create_nodes_array(n)
+    if old == 1:
+        nodes_array = [
+            [7.21362447, 4.72776071],
+            [7.48093569, 8.15635289],
+            [9.72339245, 7.86815924],
+            [2.68741026, 2.43794644],
+            [6.86692814, 2.86802978],
+            [8.11962058, 4.72617735],
+            [9.66730978, 1.6601765],
+            [0.48265261, 9.97703727],
+            [4.85291697, 3.57640542],
+            [4.64010762, 0.77011666]
+        ]
+    else:
+        nodes_array = create_nodes_array(n)
+
+
     print(nodes_array, "\n")
     tsp_matrix = get_tsp_matrix(nodes_array)
 
@@ -257,5 +273,6 @@ def main(n):
 
 
 if __name__ == "__main__":
-    n = int(input("Inserire n: "))
-    main(n)
+    n = int(input("Insert n: "))
+    old = int(input("New dataset?(0/1):"))
+    main(n, old)
