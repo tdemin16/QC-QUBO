@@ -16,6 +16,8 @@ import sys
 from dwave.system.samplers import DWaveSampler
 # Library to embed our problem onto the QPU physical graph
 from dwave.system.composites import EmbeddingComposite
+from dwave.system.samplers import LeapHybridSampler
+import random
 from time import time
 
 
@@ -76,54 +78,89 @@ def run_hybrid(theta):
     return response
 
 
-def decode_solution(tsp_matrix, response, validate=True):
-    n = len(tsp_matrix)
-    solution = []
-    sw = []
-    x = []
-    last_j = -1
-    all = set()
-    ins = set()
+def advance(iter, rnd):
+    iterator = next(iter)
+    while random.random() > rnd:
+        iterator = next(iter, iterator)
+    return iterator
 
-    for j in response:
-        x.append(j)
 
+def decode_solution(response, validate):
+    
+    n = int(np.sqrt(len(response)))
+    solution = np.array(n)
+    raw = dict()
     for i in range(n):
-        solution.append(-1)
-        sw.append(0)
+        raw[i] = list()
+    keep = list()
+    all_ = list()
+    diff = list()
+    indexes = list()
 
-    for i in range(n):
-        for j in range(n):
-            if x[n * i + j] == 1:
-                solution[i] = j
-                last_j = j
-                pass
-            pass
-
-        all.add(i)
-        if last_j != -1:
-            ins.add(last_j)
-
-        last_j = -1
-
-    if validate:
-        res = all - ins
+    if not validate:
+        solution = list()
+        for i in range(n):
+            for j in range(n):
+                if(response[n*i + j] == 1):
+                    last = j
+            if (last != -1):
+                solution.append(last)
+            last = -1
+    else:
+        solution = np.array([-1 for i in range(n)])
+        for i in range(n):
+            for j in range(n):
+                if (response[n*i +j] == 1):
+                    raw[i].append(j)
+        
+        for i in range(n):
+            if len(raw[i]) == 1:
+                keep.append(raw[i][0])
+                solution[i] = raw[i][0]
+            all_.append(i)            
 
         for i in range(n):
-            if solution[i] == -1:
-                solution[i] = res.pop()
-                ins.add(solution[i])
+            if len(raw[i]) > 1:
+                for it in raw[i]:
+                    if it not in keep: 
+                        diff.append(it)
+                
+                if len(diff) > 0:
+                    it = advance(iter(diff), random.random() % len(diff))
+                    solution[i] = it
+                    keep.append(it)
+                    diff.clear()
 
-        if len(ins) != len(all):
-            for i in range(n):
-                if sw[solution[i]] == 0:
-                    sw[solution[i]] += 1
-                else:
-                    solution[i] = res.pop()
-                    sw[solution[i]] += 1
-        pass
+        for i in range(n):
+            for j in range(n):
+                if solution[j] == i:
+                    indexes.append(j) 
+
+            if len(indexes) > 1:
+                random.shuffle(indexes)
+                index = indexes[0]
+                for it in indexes:
+                    if it == index: 
+                        solution[it] = i 
+                    else:
+                        solution[it] = -1
+
+                keep.append(i)
+
+            indexes.clear()
+
+        for it in all_:
+            if it not in keep: 
+                diff.append(it)
+            
+        for i in range(n):
+            if solution[i] == -1 and len(diff) != 0:
+                it = advance(iter(diff), random.random() % len(diff))
+                solution[i] = it
+                diff.remove(it)
 
     return solution
+
 
 # def decode_solution(distance_matrix, response):
 #     best_solution = np.inf
@@ -220,5 +257,5 @@ def main(n):
 
 
 if __name__ == "__main__":
-    n = input("Inserire n: ")
+    n = int(input("Inserire n: "))
     main(n)
