@@ -56,11 +56,11 @@ VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
     get_topology(nodes, edges, n);  // Dwave topology
 
     //Input
-    const double pmin = 0.1;   // minimum probability 0 < pδ < 0.5 of permutation modification
-    const double eta = 0.02f;  // probability decreasing rate η > 0
-    const double q = 0.2f;     // candidate perturbation probability q > 0
+    const double pmin = 0.1;       // minimum probability 0 < pδ < 0.5 of permutation modification
+    const double eta = 0.02f;      // probability decreasing rate η > 0
+    const double q = 0.2f;         // candidate perturbation probability q > 0
     const double lambda0 = 3 / 2;  // initial balancing factor λ0 > 0
-    const int N = 5;        // Decreasing time
+    const int N = 5;               // Decreasing time
 
     //Termination Parameters
     const int Nmax = 100;  // Max number of solution equal to the best one + solution worse than the best one
@@ -121,19 +121,19 @@ VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
     theta2 = g_strong(Q, nodes, edges, perm2, perm2, p);
 
 #ifdef SIMULATION
-    cout << "Computing min of Q" << endl;
+    if (log_console) cout << "Computing min of Q" << endl;
     double minimum = compute_Q(Q);  // Global minimum of Q, only for simulation pourposes
 
-    cout << "Computing z1" << endl;
+    if (log_console) cout << "Computing z1" << endl;
     z1 = map_back(min_energy(theta1), perm1);
 
-    cout << "Computing z2" << endl;
+    if (log_console) cout << "Computing z2" << endl;
     z2 = map_back(min_energy(theta2), perm2);
 #else
-    cout << "Computing z1" << endl;
+    if (log_console) cout << "Computing z1" << endl;
     z1 = map_back(send_to_annealer(theta1, n), perm1);
 
-    cout << "Computing z2" << endl;
+    if (log_console) cout << "Computing z2" << endl;
     z2 = map_back(send_to_annealer(theta2, n), perm2);
 #endif
 
@@ -171,8 +171,8 @@ VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
     bool acc = false;
     bool acc_enc = false;
     do {
-        if (i == 1) cout << "Start computing the solution" << endl
-                         << endl;
+        if (i == 1 && log_console) cout << "Start computing the solution" << endl
+                                        << endl;
         start = chrono::steady_clock::now();
         perturbed = false;
         simul_ann = false;
@@ -240,35 +240,36 @@ VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
             cout << endl
                  << diff.count() << "s\t";
         }
+        if (log_console) {
+            if (i == 1)
+                avg_time = diff.count();
+            else
+                avg_time = avg_time * alpha + (1 - alpha) * diff.count();
 
-        if (i == 1)
-            avg_time = diff.count();
-        else
-            avg_time = avg_time * alpha + (1 - alpha) * diff.count();
+            h_tmp = (float)(imax - i) * avg_time / 3600;
+            hours = h_tmp;
+            m_tmp = (h_tmp - ((int)h_tmp)) * 60;
+            mins = m_tmp;
+            sec = (m_tmp - ((int)m_tmp)) * 60;
 
-        h_tmp = (float)(imax - i) * avg_time / 3600;
-        hours = h_tmp;
-        m_tmp = (h_tmp - ((int)h_tmp)) * 60;
-        mins = m_tmp;
-        sec = (m_tmp - ((int)m_tmp)) * 60;
+            cout << "E.T.A: ";
+            if (hours < 10) cout << "0";
+            cout << hours << ":";
+            if (mins < 10) cout << "0";
+            cout << mins << ":";
+            if (sec < 10) cout << "0";
+            cout << sec << endl;
 
-        cout << "E.T.A: ";
-        if (hours < 10) cout << "0";
-        cout << hours << ":";
-        if (mins < 10) cout << "0";
-        cout << mins << ":";
-        if (sec < 10) cout << "0";
-        cout << sec << endl;
-
-        if (acc) {
-            acc_enc = true;
-            count_acc++;
+            if (acc) {
+                acc_enc = true;
+                count_acc++;
+            }
+            cout << "ACC:" << count_acc;
+            if (is_acceptable(z_star)) cout << "\tCurrent best solution is acceptable";
+            cout << endl
+                 << endl;
+            acc = false;
         }
-        cout << "ACC:" << count_acc;
-        if (is_acceptable(z_star)) cout << "\tCurrent best solution is acceptable";
-        cout << endl
-             << endl;
-        acc = false;
 
         i++;
     } while (i <= imax && (e + d < Nmax || d >= dmin));

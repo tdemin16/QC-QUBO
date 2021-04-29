@@ -88,14 +88,14 @@ int main() {
     VectorXd x;
     vector<ll> solution;
     for (int i = 0; i < N_TESTS; i++) {
-        //start = chrono::steady_clock::now();
+        start = chrono::steady_clock::now();
 
-        //x = solve(Q, IT, K, filename);
+        x = solve(Q, IT, K, filename);
 
-        //end = chrono::steady_clock::now();  // end timer
-        //difference = end - start;
-        //cout << endl
-        //     << difference.count() << "s" << endl;
+        end = chrono::steady_clock::now();  // end timer
+        difference = end - start;
+        cout << endl
+             << difference.count() << "s" << endl;
 
         solution = TSP::decode_solution(x, true);
         cout << "QALS with validation" << endl
