@@ -97,7 +97,7 @@ VectorXd solve(MatrixXd Q, int imax, int k, string filename, short logs) {
     float avg_time = -1;
     int hours, mins, sec;
     float h_tmp, m_tmp;
-    const float alpha = 0.80;
+    const float alpha = 0.95;
     string problem = "../out/prob-" + filename + ".txt";  // Temporary problem file
     string file_log = "../out/tmp-" + filename + ".txt";
     ofstream out_file;

@@ -57,7 +57,7 @@ QAP::y
     penalty
 */
 
-#define IT 300  // Algorithm iteration
+#define IT 150  // Algorithm iteration
 #define K 5     // Number of measurements per problem
 #define N_TESTS 10
 
@@ -75,9 +75,9 @@ int main() {
                             Point(1.54206421, 1.18410071),
                             Point(2.01555644, 3.15713817),
                             Point(7.83888128, 8.77009394),
-                            Point(1.4779611 , 4.16581664),
-                            Point(0.6508892 , 6.31063212),
-                            Point(6.6267559 , 5.45120931),
+                            Point(1.4779611, 4.16581664),
+                            Point(0.6508892, 6.31063212),
+                            Point(6.6267559, 5.45120931),
                             Point(9.73821452, 2.20299234),
                             Point(3.50140032, 5.36660266)};
 
@@ -90,7 +90,7 @@ int main() {
     for (int i = 0; i < N_TESTS; i++) {
         //start = chrono::steady_clock::now();
 
-        x = solve(Q, IT, K, filename);
+        //x = solve(Q, IT, K, filename);
 
         //end = chrono::steady_clock::now();  // end timer
         //difference = end - start;
@@ -98,6 +98,15 @@ int main() {
         //     << difference.count() << "s" << endl;
 
         solution = TSP::decode_solution(x, true);
+        cout << "QALS with validation" << endl
+             << "QALS: [";
+        for (lu it = 0; it < solution.size(); it++) {
+            cout << solution[it];
+            if (it < solution.size() - 1) cout << ", ";
+        }
+        cout << "] " << TSP::cost_route(D, solution) << endl;
+
+        solution = TSP::decode_solution(x, false);
         cout << "QALS solution" << endl
              << "QALS: [";
         for (lu it = 0; it < solution.size(); it++) {
@@ -105,7 +114,8 @@ int main() {
             if (it < solution.size() - 1) cout << ", ";
         }
         cout << "] " << TSP::cost_route(D, solution) << endl;
-        cout << "Calculation time: " << difference.count() << endl;
+        cout << "Calculation time: " << difference.count() << endl
+             << endl;
     }
 
     //if (solution.size() <= 16) {

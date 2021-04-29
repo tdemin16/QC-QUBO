@@ -252,11 +252,16 @@ def main(n, new):
         solution = run_hybrid(qubo)
         end = time()
 
-        solution = decode_solution(solution, True)
-        cost = calculate_cost(tsp_matrix, solution)
+        route = decode_solution(solution, True)
+        cost = calculate_cost(tsp_matrix, route)
+        print("Hybrid with validation")
+        print("Hybrid: ", route, cost)
 
+        route = decode_solution(solution, False)
+        cost = calculate_cost(tsp_matrix, route)
         print("Hybrid solution")
-        print("Hybrid: ", solution, cost)
+        print("Hybrid: ", route, cost)
+
         print("Calculation time:", end - start)
         
 
@@ -265,11 +270,16 @@ def main(n, new):
         solution = solve_tsp(qubo, k)
         end = time()
 
-        solution = decode_solution(solution, True)
-        cost = calculate_cost(tsp_matrix, solution)
+        route = decode_solution(solution, True)
+        cost = calculate_cost(tsp_matrix, route)
+        print("D-Wave with validation")
+        print("D-Wave:", route, cost)
 
+        route = decode_solution(solution, False)
+        cost = calculate_cost(tsp_matrix, route)
         print("D-Wave solution")
-        print("D-Wave:", solution, cost)
+        print("D-Wave:", route, cost)
+
         print("Calculation time:", end - start)
 
 
