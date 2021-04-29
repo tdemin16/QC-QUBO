@@ -114,7 +114,9 @@ int main() {
             if (it < solution.size() - 1) cout << ", ";
         }
         cout << "] " << TSP::cost_route(D, solution) << endl;
-        cout << "Calculation time: " << difference.count() << endl
+        cout << "Calculation time: " << difference.count() << endl;
+
+        cout << "fQ: " << fQ(Q, x) << endl
              << endl;
     }
 
