@@ -86,7 +86,7 @@ def advance(iter, rnd):
 
 
 def decode_solution(response, validate):
-    
+
     n = int(np.sqrt(len(response)))
     solution = np.array(n)
     raw = dict()
@@ -110,21 +110,21 @@ def decode_solution(response, validate):
         solution = np.array([-1 for i in range(n)])
         for i in range(n):
             for j in range(n):
-                if (response[n*i +j] == 1):
+                if (response[n*i + j] == 1):
                     raw[i].append(j)
-        
+
         for i in range(n):
             if len(raw[i]) == 1:
                 keep.append(raw[i][0])
                 solution[i] = raw[i][0]
-            all_.append(i)            
+            all_.append(i)
 
         for i in range(n):
             if len(raw[i]) > 1:
                 for it in raw[i]:
-                    if it not in keep: 
+                    if it not in keep:
                         diff.append(it)
-                
+
                 if len(diff) > 0:
                     it = advance(iter(diff), random.random() % len(diff))
                     solution[i] = it
@@ -134,14 +134,14 @@ def decode_solution(response, validate):
         for i in range(n):
             for j in range(n):
                 if solution[j] == i:
-                    indexes.append(j) 
+                    indexes.append(j)
 
             if len(indexes) > 1:
                 random.shuffle(indexes)
                 index = indexes[0]
                 for it in indexes:
-                    if it == index: 
-                        solution[it] = i 
+                    if it == index:
+                        solution[it] = i
                     else:
                         solution[it] = -1
 
@@ -150,9 +150,9 @@ def decode_solution(response, validate):
             indexes.clear()
 
         for it in all_:
-            if it not in keep: 
+            if it not in keep:
                 diff.append(it)
-            
+
         for i in range(n):
             if solution[i] == -1 and len(diff) != 0:
                 it = advance(iter(diff), random.random() % len(diff))
@@ -217,27 +217,25 @@ def distance(point_A, point_B):
     return np.sqrt((point_A[0] - point_B[0])**2 + (point_A[1] - point_B[1])**2)
 
 
-def main(n, old):
+def main(n, new):
     k = 1000
+    n_tests = 3
 
     qubo = dict()
-    if old == 0:
+    if new == 0:
         nodes_array = [
- [9.94842154, 7.98192104],
- [8.60849611, 8.00248268],
- [7.7510664 , 8.92952639],
- [2.48323566, 7.71263975],
- [0.79106925, 4.7339348 ],
- [5.43068116, 8.76787367],
- [2.01200685, 7.57374064],
- [8.24493747, 4.47630442],
- [6.12997546, 7.6483757 ],
- [5.42759893, 6.52504111],
- [1.19438987, 6.82360516],
- [5.30828759, 3.38905631]]
+            [0.66083966, 9.36939755],
+            [1.98485729, 7.62491491],
+            [1.54206421, 1.18410071],
+            [2.01555644, 3.15713817],
+            [7.83888128, 8.77009394],
+            [1.4779611 , 4.16581664],
+            [0.6508892 , 6.31063212],
+            [6.6267559 , 5.45120931],
+            [9.73821452, 2.20299234],
+            [3.50140032, 5.36660266]]
     else:
         nodes_array = create_nodes_array(n)
-
 
     print(nodes_array, "\n")
     tsp_matrix = get_tsp_matrix(nodes_array)
@@ -249,31 +247,33 @@ def main(n, old):
     add_time_constraints(tsp_matrix, constraint_constant, qubo)
     add_position_constraints(tsp_matrix, constraint_constant, qubo)
 
-    start = time()
-    solution = run_hybrid(qubo)
-    end = time()
+    for i in range(n_tests):
+        start = time()
+        solution = run_hybrid(qubo)
+        end = time()
 
-    solution = decode_solution(solution, True)
-    cost = calculate_cost(tsp_matrix, solution)
+        solution = decode_solution(solution, True)
+        cost = calculate_cost(tsp_matrix, solution)
 
-    print("Hybrid solution")
-    print("Hybrid: ", solution, cost)
-    print("Calculation time:", end - start)
+        print("Hybrid solution")
+        print("Hybrid: ", solution, cost)
+        print("Calculation time:", end - start)
+        
 
-    
-    start = time()
-    solution = solve_tsp(qubo, k)
-    end = time()
+    for i in range(n_tests):
+        start = time()
+        solution = solve_tsp(qubo, k)
+        end = time()
 
-    solution = decode_solution(solution, True)
-    cost = calculate_cost(tsp_matrix, solution)
+        solution = decode_solution(solution, True)
+        cost = calculate_cost(tsp_matrix, solution)
 
-    print("D-Wave solution")
-    print("D-Wave:", solution, cost)
-    print("Calculation time:", end - start)
+        print("D-Wave solution")
+        print("D-Wave:", solution, cost)
+        print("Calculation time:", end - start)
 
 
 if __name__ == "__main__":
     n = int(input("Insert n: "))
-    old = int(input("New dataset?(0/1):"))
-    main(n, old)
+    #new = int(input("New dataset?(0/1):"))
+    main(n, 0)

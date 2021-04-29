@@ -58,59 +58,48 @@ QAP::y
 */
 
 #define IT 300  // Algorithm iteration
-#define K 5  // Number of measurements per problem
+#define K 5     // Number of measurements per problem
+#define N_TESTS 10
 
 int main() {
+    chrono::_V2::steady_clock::time_point start;
+    chrono::_V2::steady_clock::time_point end;
+    chrono::duration<double> difference;
+
     const string filename = to_string(time(0));
-    // Start timer
-    auto start = chrono::steady_clock::now();
 
     MatrixXd Q;  // This will contain the QUBO problem
 
-    vector<Point> points = {Point(7.21362447, 4.72776071),
-                            Point(7.48093569, 8.15635289),
-                            Point(9.72339245, 7.86815924),
-                            Point(2.68741026, 2.43794644),
-                            Point(6.86692814, 2.86802978),
-                            Point(8.11962058, 4.72617735),
-                            Point(9.66730978, 1.6601765 ),
-                            Point(0.48265261, 9.97703727),
-                            Point(4.85291697, 3.57640542),
-                            Point(4.64010762, 0.77011666)};
+    vector<Point> points = {Point(0.66083966, 9.36939755),
+                            Point(1.98485729, 7.62491491),
+                            Point(1.54206421, 1.18410071),
+                            Point(2.01555644, 3.15713817),
+                            Point(7.83888128, 8.77009394),
+                            Point(1.4779611 , 4.16581664),
+                            Point(0.6508892 , 6.31063212),
+                            Point(6.6267559 , 5.45120931),
+                            Point(9.73821452, 2.20299234),
+                            Point(3.50140032, 5.36660266)};
 
     MatrixXd D = TSP::build_tsp(points);
 
     TSP::travelling_salesman_problem(Q, D, points.size());
 
     VectorXd x;
-    x = solve(Q, IT, K, filename, LOG_CONSOLE);
-
-    auto end = chrono::steady_clock::now();  // end timer
-    chrono::duration<double> difference = end - start;
-
-    cout << endl
-         << difference.count() << "s" << endl;
-
     vector<ll> solution;
-    solution = TSP::decode_solution(x, true);
-    cout << "QALS solution" << endl
-         << "QALS: [";
-    for (lu it = 0; it < solution.size(); it++) {
-        cout << solution[it];
-        if (it < solution.size() - 1) cout << ", ";
-    }
-    cout << "] " << TSP::cost_route(D, solution) << endl;
-    cout << "Calculation time: " << difference.count() << endl;
+    for (int i = 0; i < N_TESTS; i++) {
+        //start = chrono::steady_clock::now();
 
-    if (solution.size() <= 16) {
-        start = chrono::steady_clock::now();
-        solution = TSP::tsp_brute(D);
+        x = solve(Q, IT, K, filename);
 
-        end = chrono::steady_clock::now();
-        difference = end - start;
+        //end = chrono::steady_clock::now();  // end timer
+        //difference = end - start;
+        //cout << endl
+        //     << difference.count() << "s" << endl;
 
-        cout << "Brute Force solution" << endl
-             << "Brute Force: [";
+        solution = TSP::decode_solution(x, true);
+        cout << "QALS solution" << endl
+             << "QALS: [";
         for (lu it = 0; it < solution.size(); it++) {
             cout << solution[it];
             if (it < solution.size() - 1) cout << ", ";
@@ -118,6 +107,24 @@ int main() {
         cout << "] " << TSP::cost_route(D, solution) << endl;
         cout << "Calculation time: " << difference.count() << endl;
     }
+
+    //if (solution.size() <= 16) {
+    //    start = chrono::steady_clock::now();
+    //    solution = TSP::tsp_brute(D);
+    //
+    //    end = chrono::steady_clock::now();
+    //    difference = end - start;
+    //
+    //    cout << endl
+    //         << "Brute Force solution" << endl
+    //         << "Brute Force: [";
+    //    for (lu it = 0; it < solution.size(); it++) {
+    //        cout << solution[it];
+    //        if (it < solution.size() - 1) cout << ", ";
+    //    }
+    //    cout << "] " << TSP::cost_route(D, solution) << endl;
+    //    cout << "Calculation time: " << difference.count() << endl;
+    //}
 
     return 0;
 }
