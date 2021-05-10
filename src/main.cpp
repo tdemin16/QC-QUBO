@@ -59,84 +59,23 @@ QAP::y
 
 #define IT 150  // Algorithm iteration
 #define K 5     // Number of measurements per problem
-#define N_TESTS 10
+#define N 5436
+#define RANGE 100000
 
 int main() {
-    chrono::_V2::steady_clock::time_point start;
-    chrono::_V2::steady_clock::time_point end;
-    chrono::duration<double> difference;
+    string filename = to_string(time(0));
 
-    const string filename = to_string(time(0));
+    MatrixXd Q;
+    vector<ll> nums(N);
 
-    MatrixXd Q;  // This will contain the QUBO problem
+    ll c = NPP::number_partitioning_problem(Q, nums, RANGE);
 
-    vector<Point> points = {Point(0.66083966, 9.36939755),
-                            Point(1.98485729, 7.62491491),
-                            Point(1.54206421, 1.18410071),
-                            Point(2.01555644, 3.15713817),
-                            Point(7.83888128, 8.77009394),
-                            Point(1.4779611, 4.16581664),
-                            Point(0.6508892, 6.31063212),
-                            Point(6.6267559, 5.45120931),
-                            Point(9.73821452, 2.20299234),
-                            Point(3.50140032, 5.36660266)};
+    auto start = chrono::steady_clock::now();
+    VectorXd x = solve(Q, IT, K, filename, LOG_CONSOLE | LOG_FILE);
+    auto end = chrono::steady_clock::now();
+    chrono::duration<double> difftime = end - start;
 
-    MatrixXd D = TSP::build_tsp(points);
-
-    TSP::travelling_salesman_problem(Q, D, points.size());
-
-    VectorXd x;
-    vector<ll> solution;
-    for (int i = 0; i < N_TESTS; i++) {
-        start = chrono::steady_clock::now();
-
-        x = solve(Q, IT, K, filename);
-
-        end = chrono::steady_clock::now();  // end timer
-        difference = end - start;
-        cout << endl
-             << difference.count() << "s" << endl;
-
-        solution = TSP::decode_solution(x, true);
-        cout << "QALS with validation" << endl
-             << "QALS: [";
-        for (lu it = 0; it < solution.size(); it++) {
-            cout << solution[it];
-            if (it < solution.size() - 1) cout << ", ";
-        }
-        cout << "] " << TSP::cost_route(D, solution) << endl;
-
-        solution = TSP::decode_solution(x, false);
-        cout << "QALS solution" << endl
-             << "QALS: [";
-        for (lu it = 0; it < solution.size(); it++) {
-            cout << solution[it];
-            if (it < solution.size() - 1) cout << ", ";
-        }
-        cout << "] " << TSP::cost_route(D, solution) << endl;
-        cout << "Calculation time: " << difference.count() << endl;
-
-        cout << "fQ: " << fQ(Q, x) << endl
-             << endl;
-    }
-
-    //if (solution.size() <= 16) {
-    //    start = chrono::steady_clock::now();
-    //    solution = TSP::tsp_brute(D);
-    //
-    //    end = chrono::steady_clock::now();
-    //    difference = end - start;
-    //
-    //    cout << endl
-    //         << "Brute Force solution" << endl
-    //         << "Brute Force: [";
-    //    for (lu it = 0; it < solution.size(); it++) {
-    //        cout << solution[it];
-    //        if (it < solution.size() - 1) cout << ", ";
-    //    }
-    //    cout << "] " << TSP::cost_route(D, solution) << endl;
-    //    cout << "Calculation time: " << difference.count() << endl;
-    //}
+    NPP::to_file(difftime, IT, fQ(Q, x), N, RANGE, NPP::diff(Q, x, c), x, nums, filename);
 
     return 0;
 }
